@@ -5,13 +5,14 @@ import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.http.HttpHeaders
+import org.springframework.context.annotation.PropertySource
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.userdetails.UserDetails
 import org.springframework.stereotype.Component
 import java.util.*
 
+@PropertySource("classpath:security.properties")
 @Component
 class JWTTokenProvider(private val userDetailsService: CustomUserDetailsService) {
     @Value("\${jwt.signing.key}")
@@ -78,16 +79,5 @@ class JWTTokenProvider(private val userDetailsService: CustomUserDetailsService)
 
     fun getUserPK(jwtToken: String): String {
         return getAllClaimsFromToken(jwtToken).subject
-    }
-
-    fun getJwtTokenFromHeader(headers: HttpHeaders): String {
-        val jwtToken: String? = headers["Authorization"]?.get(0)
-
-        // Substring Authorization Since the value is in "Authorization":"Bearer JWT_TOKEN" format
-        if(jwtToken != null && jwtToken.startsWith("Bearer ")) {
-            return jwtToken.substring(7)
-        }
-        // TODO Fix Exception
-        throw RuntimeException()
     }
 }

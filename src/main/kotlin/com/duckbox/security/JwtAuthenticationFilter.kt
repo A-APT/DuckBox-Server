@@ -10,11 +10,9 @@ import javax.servlet.ServletResponse
 import javax.servlet.http.HttpServletRequest
 
 class JwtAuthenticationFilter(private val jwtTokenProvider: JWTTokenProvider) :GenericFilterBean() {
-    @Value("\${jwt.header.string}")
-    lateinit var HEADER_STRING: String
 
-    @Value("\${jwt.token.prefix}")
-    lateinit var TOKEN_PREFIX: String
+    val HEADER_STRING: String = "Authorization"
+    val TOKEN_PREFIX: String = "Bearer"
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
         // Get token from header
@@ -35,8 +33,8 @@ class JwtAuthenticationFilter(private val jwtTokenProvider: JWTTokenProvider) :G
         val jwtToken: String? = request.getHeader(HEADER_STRING)
 
         // Substring Authorization Since the value is in "Authorization":"Bearer JWT_TOKEN" format
-        if(jwtToken != null && jwtToken.startsWith(HEADER_STRING)) {
-            return jwtToken.substring(HEADER_STRING.length).trim()
+        if(jwtToken != null && jwtToken.startsWith(TOKEN_PREFIX)) {
+            return jwtToken.substring(TOKEN_PREFIX.length).trim()
         }
         // TODO Fix Exception
         throw RuntimeException()

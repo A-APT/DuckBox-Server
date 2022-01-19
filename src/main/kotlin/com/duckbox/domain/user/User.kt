@@ -13,16 +13,16 @@ class User (
     var id: Long = -1,
 
     @Column(nullable = false)
-    var name: String,
-
-    @Column(nullable = false)
-    private var password: String,
-
-    @Column(nullable = false)
     var did: String,
 
     @Column(nullable = false)
     var studentId: Int,
+
+    @Column(nullable = false)
+    var name: String,
+
+    @Column(nullable = false)
+    private var password: String,
 
     @Column(nullable = false)
     var email: String,
@@ -48,8 +48,8 @@ class User (
             }
             .collect(Collectors.toList())
     }
+    override fun getUsername(): String = email
     override fun getPassword(): String = password
-    override fun getUsername(): String = did
     override fun isAccountNonExpired(): Boolean = true
     override fun isAccountNonLocked(): Boolean = true
     override fun isCredentialsNonExpired(): Boolean = true

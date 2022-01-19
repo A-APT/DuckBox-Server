@@ -49,7 +49,7 @@ class User (
             .collect(Collectors.toList())
     }
     override fun getPassword(): String = password
-    override fun getUsername(): String = name
+    override fun getUsername(): String = did
     override fun isAccountNonExpired(): Boolean = true
     override fun isAccountNonLocked(): Boolean = true
     override fun isCredentialsNonExpired(): Boolean = true

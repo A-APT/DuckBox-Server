@@ -22,6 +22,7 @@ class UserService (
     }
 
     fun register(registerDto: RegisterDto) {
+        // TODO duplicate
         userRepository.save(
             User(
                 did =  generateUserDID(),

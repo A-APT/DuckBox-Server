@@ -16,10 +16,10 @@ class JwtAuthenticationFilter(private val jwtTokenProvider: JWTTokenProvider) :G
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
         // Get token from header
-        val jwtToken: String = getJwtTokenFromHeader(request as HttpServletRequest)
+        val jwtToken: String? = getTokenFromHeader(request as HttpServletRequest)
 
         // Check token is valid
-        if (jwtTokenProvider.verifyToken(jwtToken)) {
+        if (jwtToken != null && jwtTokenProvider.verifyToken(jwtToken)) {
             // Get user information
             val authentication: Authentication = jwtTokenProvider.getAuthentication(jwtToken)
 
@@ -29,15 +29,12 @@ class JwtAuthenticationFilter(private val jwtTokenProvider: JWTTokenProvider) :G
         chain?.doFilter(request, response)
     }
 
-    private fun getJwtTokenFromHeader(request: HttpServletRequest): String {
-        val jwtToken: String? = request.getHeader(HEADER_STRING)
+    private fun getTokenFromHeader(request: HttpServletRequest): String? {
+        val token: String? = request.getHeader(HEADER_STRING)
 
         // Substring Authorization Since the value is in "Authorization":"Bearer JWT_TOKEN" format
-        if(jwtToken != null && jwtToken.startsWith(TOKEN_PREFIX)) {
-            return jwtToken.substring(TOKEN_PREFIX.length).trim()
-        }
-        // TODO Fix Exception
-        throw RuntimeException()
+        return if(token != null && token.startsWith(TOKEN_PREFIX)) {
+            token.substring(TOKEN_PREFIX.length).trim()
+        } else null
     }
-
 }

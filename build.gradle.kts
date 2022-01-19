@@ -56,6 +56,7 @@ dependencies {
     testImplementation(kotlin("test-junit"))
     compileOnly("org.springframework.boot:spring-boot-configuration-processor")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.4.2")
+    implementation("mysql:mysql-connector-java")
 }
 
 tasks.test {

@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 class EmailController (private val emailService: EmailService) {
 
     @PostMapping("/api/v1/user/email")
-    fun emailAuth(@RequestBody targetEmail: String): ResponseEntity<Unit> {
+    fun generateEmailAuth(@RequestBody targetEmail: String): ResponseEntity<Unit> {
         emailService.sendEmailAuth(targetEmail)
         return ResponseEntity.noContent().build()
     }

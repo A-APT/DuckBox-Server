@@ -61,6 +61,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation(kotlin("test-junit"))
     testImplementation("org.springframework.security:spring-security-test")
+    testImplementation("io.mockk:mockk:1.12.2")
 
     // JWT
     implementation("io.jsonwebtoken:jjwt-impl:0.11.2")

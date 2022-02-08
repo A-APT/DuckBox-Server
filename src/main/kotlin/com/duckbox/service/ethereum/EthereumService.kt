@@ -21,7 +21,7 @@ class EthereumService(private val web3j: Web3j) {
     @Value("\${contract.owner}")
     private lateinit var ownerAddress: String
 
-    fun ethCall(contractAddress: String, functionName: String, inputParams: List<Type<*>>, outputParams: List<TypeReference<*>>): Any {
+    fun ethCall(contractAddress: String, functionName: String, inputParams: List<Type<*>>, outputParams: List<TypeReference<*>>): Any? {
         // generate function
         val function = org.web3j.abi.datatypes.Function(functionName, inputParams, outputParams)
         val encodedFunction = FunctionEncoder.encode(function)
@@ -33,8 +33,8 @@ class EthereumService(private val web3j: Web3j) {
 
         // decode response
         val decode = FunctionReturnDecoder.decode(ethCall.result, function.outputParameters)
-        print("ethcCall result ${ethCall.result} / value: ${decode[0].value} / type: ${decode[0].typeAsString}")
-        return decode[0].value
+        //print("ethcCall result ${ethCall.result} / value: ${decode[0].value} / type: ${decode[0].typeAsString}")
+        return if (decode.size > 0) decode[0].value else null
     }
 
     fun getReceipt(transactionHash: String): TransactionReceipt? {

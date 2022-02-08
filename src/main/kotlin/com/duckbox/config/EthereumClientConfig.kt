@@ -14,8 +14,17 @@ class EthereumClientConfig {
     @Value("\${web3j.client-address}")
     private lateinit var clientAddress: String
 
+    @Value("\${contract.owner}")
+    private lateinit var owner: String
+
+    @Value("\${contract.owner-private}")
+    private lateinit var ownerPrivate: String
+
     @Bean
     fun web3j(): Web3j {
+        // unlock owner's account
+        Admin.build(HttpService(clientAddress))
+            .personalUnlockAccount(owner, ownerPrivate)
         return Web3j.build(HttpService(clientAddress))
     }
 

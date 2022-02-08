@@ -1,4 +1,4 @@
-package com.duckbox.security
+package com.duckbox.config
 
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean

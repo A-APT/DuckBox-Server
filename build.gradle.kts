@@ -69,6 +69,10 @@ dependencies {
 
     // Email
     implementation("org.springframework.boot:spring-boot-starter-mail")
+
+    // Ethereum
+    implementation("org.web3j:core:4.5.11")
+    testImplementation("org.web3j:web3j-unit:4.5.11")
 }
 
 tasks.test {

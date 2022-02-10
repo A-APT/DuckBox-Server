@@ -27,13 +27,20 @@ class DidServiceTest {
     fun is_removeDid_works_well() {
         // arrange
         val response = didService.removeDid(did = did)
-        print(response)
+        println(response)
     }
 
     @Test
     fun is_getDId_works_well() {
         didService.getDid(did).apply {
-            print(this)
+            println(this)
+        }
+    }
+
+    @Test
+    fun is_getOwner_works_well() {
+        didService.getOwner().apply {
+            println(this)
         }
     }
 }

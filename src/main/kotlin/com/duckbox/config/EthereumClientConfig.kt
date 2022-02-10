@@ -11,7 +11,7 @@ import org.web3j.protocol.http.HttpService
 @PropertySource("classpath:ethereum.properties")
 @Configuration
 class EthereumClientConfig {
-    @Value("\${web3j.client-address}")
+    @Value("\${web3j.client-address-local}")
     private lateinit var clientAddress: String
 
     @Value("\${contract.owner}")

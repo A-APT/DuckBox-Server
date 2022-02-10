@@ -8,8 +8,6 @@ import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.TypeReference
 import org.web3j.abi.datatypes.Type
 import org.web3j.crypto.Credentials
-import org.web3j.crypto.RawTransaction
-import org.web3j.crypto.TransactionEncoder
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.DefaultBlockParameterName
 import org.web3j.protocol.core.methods.request.Transaction
@@ -17,9 +15,8 @@ import org.web3j.protocol.core.methods.response.EthCall
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
 import org.web3j.protocol.core.methods.response.EthSendTransaction
 import org.web3j.protocol.core.methods.response.TransactionReceipt
+import org.web3j.tx.RawTransactionManager
 import org.web3j.tx.gas.DefaultGasProvider
-import org.web3j.utils.Convert
-import org.web3j.utils.Numeric
 import java.math.BigInteger
 
 @PropertySource("classpath:ethereum.properties")
@@ -43,6 +40,10 @@ class EthereumService(private val web3j: Web3j) {
         val transaction = Transaction.createEthCallTransaction(ownerAddress, contractAddress, encodedFunction)
         val ethCall: EthCall = web3j.ethCall(transaction, DefaultBlockParameterName.LATEST).sendAsync().get()
 
+        if (ethCall.hasError()){
+            throw Exception(ethCall.error.message) // TODO error handling
+        }
+
         // decode response
         val decode = FunctionReturnDecoder.decode(ethCall.result, function.outputParameters)
         //print("ethcCall result ${ethCall.result} / value: ${decode[0].value} / type: ${decode[0].typeAsString}")
@@ -59,6 +60,10 @@ class EthereumService(private val web3j: Web3j) {
         val transaction = Transaction.createEthCallTransaction(ownerAddress, contractAddress, encodedFunction)
         val ethSend: EthSendTransaction = web3j.ethSendTransaction(transaction).sendAsync().get()
 
+        if (ethSend.hasError()){
+            throw Exception(ethSend.error.message) // TODO error handling
+        }
+
         // decode response
         val decode = FunctionReturnDecoder.decode(ethSend.result, function.outputParameters)
         return if (decode.size > 0) decode[0].value else null
@@ -69,20 +74,26 @@ class EthereumService(private val web3j: Web3j) {
         val function = org.web3j.abi.datatypes.Function(functionName, inputParams, outputParams)
         val encodedFunction = FunctionEncoder.encode(function)
 
-        // create raw transaction (:signed transaction)
-        val rawTransaction: RawTransaction = RawTransaction.createTransaction(
-            BigInteger.valueOf(100), // nonce
-            Convert.toWei("1", Convert.Unit.GWEI).toBigInteger(), // gasPrice
-            DefaultGasProvider.GAS_LIMIT, // gasLimit
-            contractAddress, // to
-            encodedFunction // data
-        )
-
         // send raw transaction
         val credentials: Credentials = Credentials.create(ownerPrivate)
-        val signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials)
-        val hexValue: String = Numeric.toHexString(signedMessage)
-        val ethSend: EthSendTransaction = web3j.ethSendRawTransaction(hexValue).sendAsync().get()
+        val manager = RawTransactionManager(web3j, credentials)
+        val ethSend: EthSendTransaction = manager.sendTransaction(
+            DefaultGasProvider.GAS_PRICE, // gasPrice
+            BigInteger.valueOf(8000000), // gasLimit (ropsten)
+            contractAddress, // to
+            encodedFunction, // data
+            BigInteger.ONE // value
+        )
+
+        if (ethSend.hasError()){
+            throw Exception(ethSend.error.message) // TODO error handling
+        }
+
+//        val processor = PollingTransactionReceiptProcessor(
+//            web3j,
+//            TransactionManager.DEFAULT_POLLING_FREQUENCY,
+//            TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH)
+//        val receipt = processor.waitForTransactionReceipt(ethSend.transactionHash)
 
         // decode response
         val decode = FunctionReturnDecoder.decode(ethSend.result, function.outputParameters)

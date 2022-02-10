@@ -8,7 +8,6 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 
 import org.web3j.protocol.Web3j
 
-
 @SpringBootTest
 @ExtendWith(SpringExtension::class)
 class DidServiceTest {
@@ -20,7 +19,7 @@ class DidServiceTest {
     @Test
     fun is_registerDId_works_well() {
         val response = didService.registerDid(did = did)
-        print(response)
+        println(response)
     }
 
     @Test

@@ -73,6 +73,9 @@ dependencies {
     // Ethereum
     implementation("org.web3j:core:4.5.11")
     testImplementation("org.web3j:web3j-unit:4.5.11")
+
+    // SMS (coolSMS)
+    implementation("net.nurigo:javaSDK:2.2")
 }
 
 tasks.test {

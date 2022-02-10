@@ -1,6 +1,6 @@
 package com.duckbox.dto.user
 
-data class EmailTokenDto (
-    var email: String,
+data class SMSTokenDto (
+    var phoneNumber: String,
     var token: String
     )

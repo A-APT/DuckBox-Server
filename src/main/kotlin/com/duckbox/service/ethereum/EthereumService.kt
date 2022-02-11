@@ -1,5 +1,6 @@
 package com.duckbox.service.ethereum
 
+import com.duckbox.errors.exception.EthereumException
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.PropertySource
 import org.springframework.stereotype.Service
@@ -41,7 +42,7 @@ class EthereumService(private val web3j: Web3j) {
         val ethCall: EthCall = web3j.ethCall(transaction, DefaultBlockParameterName.LATEST).sendAsync().get()
 
         if (ethCall.hasError()){
-            throw Exception(ethCall.error.message) // TODO error handling
+            throw EthereumException(ethCall.error.message)
         }
 
         // decode response
@@ -61,7 +62,7 @@ class EthereumService(private val web3j: Web3j) {
         val ethSend: EthSendTransaction = web3j.ethSendTransaction(transaction).sendAsync().get()
 
         if (ethSend.hasError()){
-            throw Exception(ethSend.error.message) // TODO error handling
+            throw EthereumException(ethSend.error.message)
         }
 
         // decode response
@@ -86,7 +87,7 @@ class EthereumService(private val web3j: Web3j) {
         )
 
         if (ethSend.hasError()){
-            throw Exception(ethSend.error.message) // TODO error handling
+            throw EthereumException(ethSend.error.message)
         }
 
 //        val processor = PollingTransactionReceiptProcessor(

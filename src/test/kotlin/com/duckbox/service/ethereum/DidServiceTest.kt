@@ -1,12 +1,13 @@
 package com.duckbox.service.ethereum
 
+import com.duckbox.errors.exception.EthereumException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
-
-import org.web3j.protocol.Web3j
+import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 
 @SpringBootTest
 @ExtendWith(SpringExtension::class)
@@ -14,25 +15,52 @@ class DidServiceTest {
     @Autowired
     private lateinit var didService: DIdService
 
-    private val did = "did.test"
+    private val did = "did.test2"
 
     @Test
     fun is_registerDId_works_well() {
-        val response = didService.registerDid(did = did)
-        println(response)
+        // arrange
+        didService.registerDid(did = did)
+
+        // act & assert
+        didService.getDid(did).apply { // TODO
+            assertThat(this!!).isEqualTo(did)
+        }
+
+        // clean up
+        didService.removeDid(did = did)
+    }
+
+    @Test
+    fun is_registerDId_works_on_duplicate() {
+        didService.registerDid(did = did)
+        runCatching {
+            didService.registerDid(did = did)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is EthereumException).isEqualTo(true)
+        }
+
+        // clean up
+        didService.removeDid(did = did)
     }
 
     @Test
     fun is_removeDid_works_well() {
         // arrange
-        val response = didService.removeDid(did = did)
-        println(response)
-    }
+        didService.registerDid(did = did)
 
-    @Test
-    fun is_getDId_works_well() {
-        didService.getDid(did).apply {
-            println(this)
+        // act
+        didService.removeDid(did = did)
+
+        // assert
+        runCatching {
+            didService.getDid(did)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is EthereumException).isEqualTo(true)
         }
     }
 

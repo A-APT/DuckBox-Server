@@ -1,10 +1,12 @@
 package com.duckbox.controller
 
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.dto.JWTToken
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.service.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -131,6 +133,46 @@ class UserControllerTest {
             .postForEntity("${baseAddress}/api/v1/user/login", loginRequestDto, NotFoundException::class.java)
             .apply {
                 assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_refreshToken_works_well() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val loginRequestDto = LoginRequestDto(
+            email = mockRegisterDto.email,
+            password = mockRegisterDto.password
+        )
+        val loginResponseDto = userService.login(loginRequestDto)
+
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/refresh", loginResponseDto.body!!.refreshToken, JWTToken::class.java)
+            .body
+            .apply {
+                assertThat(this).isNotEqualTo(null)
+                assertThat(token).isNotEqualTo(null)
+                assertThat(refreshToken).isNotEqualTo(null)
+            }
+    }
+
+    @Test
+    fun is_refreshToken_works_on_invalidToken() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val loginRequestDto = LoginRequestDto(
+            email = mockRegisterDto.email,
+            password = mockRegisterDto.password
+        )
+        userService.login(loginRequestDto)
+
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/refresh", "invalid-token", UnauthorizedException::class.java)
+            .body!!
+            .apply {
+                assertThat(message).isEqualTo("Failed when refresh token.")
             }
     }
 }

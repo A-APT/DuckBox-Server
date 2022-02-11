@@ -2,11 +2,13 @@ package com.duckbox.service
 
 import com.duckbox.domain.user.User
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.dto.JWTToken
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.security.JWTTokenProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -132,6 +134,47 @@ class UserServiceTest {
         }.onFailure {
             assertThat(it is NotFoundException).isEqualTo(true)
             assertThat(it.message).isEqualTo("User [${loginRequestDto.email}] was not registered.")
+        }
+    }
+
+    @Test
+    fun is_refreshToken_works_well() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val loginRequestDto = LoginRequestDto(
+            email = mockRegisterDto.email,
+            password = mockRegisterDto.password
+        )
+        val loginResponseDto: LoginResponseDto = userService.login(loginRequestDto).body!!
+
+        // act
+        val jwtToken: JWTToken = userService.refreshToken(loginResponseDto.refreshToken).body!!
+
+        // assert
+        jwtToken.apply {
+            assertThat(jwtTokenProvider.verifyToken(token)).isEqualTo(true)
+            assertThat(jwtTokenProvider.getUserPK(token)).isEqualTo(loginRequestDto.email)
+        }
+    }
+
+    @Test
+    fun is_refreshToken_works_on_invalidToken() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val loginRequestDto = LoginRequestDto(
+            email = mockRegisterDto.email,
+            password = mockRegisterDto.password
+        )
+        userService.login(loginRequestDto).body!!
+
+        // act
+        runCatching {
+            userService.refreshToken("invalid-token").body!!
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is UnauthorizedException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Failed when refresh token.")
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.duckbox.controller
 
+import com.duckbox.dto.JWTToken
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
@@ -21,5 +22,10 @@ class UserController(private val userService: UserService) {
     @PostMapping("/api/v1/user/login")
     fun login(@RequestBody loginRequestDto: LoginRequestDto): ResponseEntity<LoginResponseDto> {
         return userService.login(loginRequestDto)
+    }
+
+    @PostMapping("/api/v1/user/refresh")
+    fun refreshToken(@RequestBody refreshToken: String): ResponseEntity<JWTToken> {
+        return userService.refreshToken(refreshToken)
     }
 }

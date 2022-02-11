@@ -1,6 +1,7 @@
 package com.duckbox.security
 
 import com.duckbox.dto.JWTToken
+import com.duckbox.errors.exception.UnauthorizedException
 import io.jsonwebtoken.Claims
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
@@ -51,16 +52,15 @@ class JWTTokenProvider(private val userDetailsService: CustomUserDetailsService)
         }.getOrDefault(false)
     }
 
-    fun refreshToken(refreshToken: String?): JWTToken {
-        if (refreshToken != null && verifyToken(refreshToken)) {
+    fun refreshToken(refreshToken: String): JWTToken {
+        if (verifyToken(refreshToken)) {
             val claims: Claims = getAllClaimsFromToken(refreshToken)
             val userPK: String = claims.subject
             val roles: List<String> = claims["roles"] as List<String>
 
             return generateToken(userPK, roles);
         }
-        // TODO Fix Exception
-        throw RuntimeException()
+        throw UnauthorizedException("Failed when refresh token.")
     }
 
     fun getAuthentication(jwtToken: String): Authentication {

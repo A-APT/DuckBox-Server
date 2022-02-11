@@ -82,4 +82,13 @@ class UserService (
                 LoginResponseDto(token = jwtToken.token, refreshToken = jwtToken.refreshToken)
             )
     }
+
+    fun refreshToken(refreshToken: String): ResponseEntity<JWTToken> { // refresh JWT token
+        val jwtToken: JWTToken = jwtTokenProvider.refreshToken(refreshToken)
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                JWTToken(token = jwtToken.token, refreshToken = jwtToken.refreshToken)
+            )
+    }
 }

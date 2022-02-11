@@ -4,6 +4,7 @@ import com.duckbox.domain.user.UserRepository
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
+import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.service.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.Before
@@ -67,6 +68,19 @@ class UserControllerTest {
     }
 
     @Test
+    fun is_register_works_on_duplicate() {
+        // arrange
+        userService.register(mockRegisterDto)
+
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/register", mockRegisterDto, Unit::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.CONFLICT)
+            }
+    }
+
+    @Test
     fun is_login_works_well() {
         // arrange
         userService.register(mockRegisterDto)
@@ -83,6 +97,40 @@ class UserControllerTest {
                 assertThat(this).isNotEqualTo(null)
                 assertThat(token).isNotEqualTo(null)
                 assertThat(refreshToken).isNotEqualTo(null)
+            }
+    }
+
+    @Test
+    fun is_login_works_on_invalidPW() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val loginRequestDto = LoginRequestDto(
+            email = mockRegisterDto.email,
+            password = "invalid" // invalid password
+        )
+
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/login", loginRequestDto, NotFoundException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_login_works_on_NOTFOUND_user() {
+        // not register any user
+        // arrange
+        val loginRequestDto = LoginRequestDto(
+            email = mockRegisterDto.email,
+            password = "invalid"
+        )
+
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/login", loginRequestDto, NotFoundException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
             }
     }
 }

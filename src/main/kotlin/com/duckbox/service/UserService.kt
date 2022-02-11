@@ -6,6 +6,8 @@ import com.duckbox.dto.JWTToken
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
+import com.duckbox.errors.exception.ConflictException
+import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.security.JWTTokenProvider
 import com.duckbox.service.ethereum.DIdService
 import com.duckbox.utils.HashUtils
@@ -28,10 +30,16 @@ class UserService (
     }
 
     fun register(registerDto: RegisterDto) {
-        // TODO duplicate
+        // check duplicate
+        runCatching {
+            userRepository.findByEmail(registerDto.email)
+        }.onSuccess {
+            throw ConflictException("User email [${registerDto.email}] is already registered.")
+        }
+
         // send transaction
         val did = generateUserDID(registerDto.email, registerDto.phoneNumber)
-        didService.registerDid(did)
+        //didService.registerDid(did)
 
         // save to server
         userRepository.save(
@@ -55,11 +63,15 @@ class UserService (
         lateinit var user: User
         runCatching {
             userRepository.findByEmail(loginRequestDto.email)
-        }.onSuccess { user = it }.onFailure { throw it }
+        }.onSuccess {
+            user = it
+        }.onFailure {
+            throw NotFoundException("User [${loginRequestDto.email}] was not registered.")
+        }
 
         // Check password
         if (user.password != loginRequestDto.password) {
-            throw Exception("Email or Password is wrong.")
+            throw NotFoundException("User email or password was wrong.")
         }
 
         // Generate JWT token

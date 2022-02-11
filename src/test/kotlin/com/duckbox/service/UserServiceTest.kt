@@ -5,6 +5,8 @@ import com.duckbox.domain.user.UserRepository
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
+import com.duckbox.errors.exception.ConflictException
+import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.security.JWTTokenProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -58,6 +60,20 @@ class UserServiceTest {
     }
 
     @Test
+    fun is_register_works_on_duplicate() {
+        // act
+        userService.register(mockRegisterDto)
+        runCatching {
+            userService.register(mockRegisterDto)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is ConflictException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User email [${mockRegisterDto.email}] is already registered.")
+        }
+    }
+
+    @Test
     fun is_login_works_well() {
         // arrange
         userService.register(mockRegisterDto)
@@ -95,7 +111,27 @@ class UserServiceTest {
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
-            // TODO
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User email or password was wrong.")
+        }
+    }
+
+    @Test
+    fun is_login_works_well_when_NotFoundUser() {
+        // arrange
+        val loginRequestDto = LoginRequestDto(
+            email = mockRegisterDto.email,
+            password = "invalid"
+        )
+
+        // act, assert
+        runCatching {
+            userService.login(loginRequestDto).body
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [${loginRequestDto.email}] was not registered.")
         }
     }
 }

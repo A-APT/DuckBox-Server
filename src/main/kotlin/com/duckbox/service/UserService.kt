@@ -39,7 +39,7 @@ class UserService (
 
         // send transaction
         val did = generateUserDID(registerDto.email, registerDto.phoneNumber)
-        //didService.registerDid(did)
+        didService.registerDid(did)
 
         // save to server
         userRepository.save(

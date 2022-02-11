@@ -42,18 +42,21 @@ class UserControllerTest {
         userRepository.deleteAll()
     }
 
+    val mockRegisterDto = RegisterDto(
+        studentId = 2019333,
+        name = "je",
+        password = "test",
+        email = "email@konkuk.ac.kr",
+        phoneNumber = "01012341234",
+        nickname = "duck",
+        college = "ku",
+        department = "computer"
+    )
+
     @Test
     fun is_register_works_well() {
         // arrange
-        val registerDto = RegisterDto(
-            studentId = 2019333,
-            name = "je",
-            password = "test",
-            email = "email@konkuk.ac.kr",
-            nickname = "duck",
-            college = "ku",
-            department = "computer"
-        )
+        val registerDto = mockRegisterDto
 
         // act, assert
         restTemplate
@@ -66,20 +69,10 @@ class UserControllerTest {
     @Test
     fun is_login_works_well() {
         // arrange
-        val email = "email@konkuk.ac.kr"
-        val password = "test"
-        userService.register(RegisterDto(
-            studentId = 2019333,
-            name = "je",
-            password = password,
-            email = email,
-            nickname = "duck",
-            college = "ku",
-            department = "computer"
-        ))
+        userService.register(mockRegisterDto)
         val loginRequestDto = LoginRequestDto(
-            email = email,
-            password = password
+            email = mockRegisterDto.email,
+            password = mockRegisterDto.password
         )
 
         // act, assert

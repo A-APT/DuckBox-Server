@@ -28,6 +28,9 @@ class User (
     var email: String,
 
     @Column(nullable = false)
+    var phoneNumber: String,
+
+    @Column(nullable = false)
     var nickname: String,
 
     @Column(nullable = false)

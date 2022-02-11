@@ -35,45 +35,35 @@ class UserServiceTest {
         userRepository.deleteAll()
     }
 
+    val mockRegisterDto = RegisterDto(
+        studentId = 2019333,
+        name = "je",
+        password = "test",
+        email = "email@konkuk.ac.kr",
+        phoneNumber = "01012341234",
+        nickname = "duck",
+        college = "ku",
+        department = "computer"
+    )
+
     @Test
     fun is_register_works_well() {
-        // arrange
-        val registerDto = RegisterDto(
-            studentId = 2019333,
-            name = "je",
-            password = "test",
-            email = "email@konkuk.ac.kr",
-            nickname = "duck",
-            college = "ku",
-            department = "computer"
-        )
-
         // act
-        userService.register(registerDto)
+        userService.register(mockRegisterDto)
 
         // assert
-        val user: User = userRepository.findByEmail(registerDto.email)
-        assertThat(user.email).isEqualTo(registerDto.email)
-        assertThat(user.password).isEqualTo(registerDto.password)
+        val user: User = userRepository.findByEmail(mockRegisterDto.email)
+        assertThat(user.email).isEqualTo(mockRegisterDto.email)
+        assertThat(user.password).isEqualTo(mockRegisterDto.password)
     }
 
     @Test
     fun is_login_works_well() {
         // arrange
-        val email = "email@konkuk.ac.kr"
-        val password = "test"
-        userService.register(RegisterDto(
-            studentId = 2019333,
-            name = "je",
-            password = password,
-            email = email,
-            nickname = "duck",
-            college = "ku",
-            department = "computer"
-        ))
+        userService.register(mockRegisterDto)
         val loginRequestDto = LoginRequestDto(
-            email = email,
-            password = password
+            email = mockRegisterDto.email,
+            password = mockRegisterDto.password
         )
 
         // act
@@ -86,26 +76,16 @@ class UserServiceTest {
         assertThat(loginResponseDto).isNotEqualTo(null)
         loginResponseDto?.apply {
             assertThat(jwtTokenProvider.verifyToken(token)).isEqualTo(true)
-            assertThat(jwtTokenProvider.getUserPK(token)).isEqualTo(email)
+            assertThat(jwtTokenProvider.getUserPK(token)).isEqualTo(loginRequestDto.email)
         }
     }
 
     @Test
     fun is_login_works_well_when_invalidPW() {
         // arrange
-        val email = "email@konkuk.ac.kr"
-        val password = "test"
-        userService.register(RegisterDto(
-            studentId = 2019333,
-            name = "je",
-            password = password,
-            email = email,
-            nickname = "duck",
-            college = "ku",
-            department = "computer"
-        ))
+        userService.register(mockRegisterDto)
         val loginRequestDto = LoginRequestDto(
-            email = email,
+            email = mockRegisterDto.email,
             password = "invalid"
         )
 

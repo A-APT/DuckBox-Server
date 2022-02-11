@@ -23,6 +23,7 @@ class UserRepositoryTest {
         name = "je",
         password = "test",
         email = "email@konkuk.ac.kr",
+        phoneNumber = "01012341234",
         nickname = "duck",
         college = "ku",
         department = "computer",
@@ -44,6 +45,7 @@ class UserRepositoryTest {
         assertThat(userRepository.findByDid(mockUser.did).did).isEqualTo(mockUser.did)
         assertThat(userRepository.findByStudentId(mockUser.studentId).studentId).isEqualTo(mockUser.studentId)
         assertThat(userRepository.findByEmail(mockUser.email).email).isEqualTo(mockUser.email)
+        assertThat(userRepository.findByEmail(mockUser.phoneNumber).phoneNumber).isEqualTo(mockUser.phoneNumber)
         assertThat(userRepository.findByNickname(mockUser.nickname).nickname).isEqualTo(mockUser.nickname)
     }
 

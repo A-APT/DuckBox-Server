@@ -2,6 +2,9 @@ package com.duckbox.service
 
 import com.duckbox.domain.user.SMSAuth
 import com.duckbox.domain.user.SMSAuthRepository
+import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.errors.exception.UnauthorizedException
+import com.duckbox.errors.exception.UnknownException
 import net.nurigo.java_sdk.api.Message
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.PropertySource
@@ -31,7 +34,11 @@ class SMSService (private val smsAuthRepository: SMSAuthRepository) {
             put("type", "SMS")
             put("text", text)
         }
-        coolSMS.send(params)
+        runCatching {
+            coolSMS.send(params)
+        }.onFailure {
+            throw UnknownException("Caused by CoolsmsException")
+        }
     }
 
     fun sendSMSAuth(targetNumber: String) {
@@ -68,7 +75,11 @@ class SMSService (private val smsAuthRepository: SMSAuthRepository) {
         lateinit var smsAuth: SMSAuth
         runCatching {
             smsAuthRepository.findByPhoneNumber(targetNumber)
-        }.onSuccess { smsAuth = it }.onFailure { throw it }
+        }.onSuccess {
+            smsAuth = it
+        }.onFailure {
+            throw NotFoundException("No authentication token for [${targetNumber}]")
+        }
 
         // Check email token
         val currentTime = System.currentTimeMillis()
@@ -77,7 +88,7 @@ class SMSService (private val smsAuthRepository: SMSAuthRepository) {
             smsAuthRepository.save(smsAuth)
             return true
         } else {
-            throw Exception("SMS Authentication Failed: Please check your phone-number or token validation time") // TODO
+            throw UnauthorizedException("SMS Authentication Failed: Please check your phone-number or token validation time")
         }
     }
 }

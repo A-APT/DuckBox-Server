@@ -2,6 +2,9 @@ package com.duckbox.controller
 
 import com.duckbox.domain.user.SMSAuthRepository
 import com.duckbox.dto.user.SMSTokenDto
+import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.errors.exception.UnauthorizedException
+import com.duckbox.errors.exception.UnknownException
 import com.duckbox.service.SMSService
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
@@ -59,7 +62,7 @@ class SMSControllerTest {
     }
 
     @Test
-    fun is_generateEmailAuth_works_well() {
+    fun is_generateEmailAuth_works_well() { // TODO check any() works well...
         // arrange
         //every { mockSMSService.sendMessage(any(), any()) } answers {}
         setSMSService() // set smsService to mockSMSService
@@ -77,6 +80,20 @@ class SMSControllerTest {
             assertThat(expired).isEqualTo(false)
             assertThat(token).isEqualTo(token)
         }
+    }
+
+    @Test
+    fun is_generateEmailAuth_works_sendMessage_error() { // TODO check any() works well...
+        // arrange
+        //every { mockSMSService.sendMessage(any(), any()) } answers { UnknownException("Caused by CoolsmsException") }
+        setSMSService() // set smsService to mockSMSService
+
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/sms", testNumber, UnknownException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+            }
     }
 
     @Test
@@ -118,5 +135,36 @@ class SMSControllerTest {
         }
     }
 
-    // TODO error handling
+    @Test
+    fun is_verifyEmailToken_works_on_NOTFOUND() {
+        //  arrange
+        val smsTokenDto = SMSTokenDto(
+            phoneNumber = testNumber,
+            token = "token"
+        )
+
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/sms/verify", smsTokenDto, NotFoundException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_verifyEmailToken_works_on_invalidToken() {
+        //  arrange
+        smsService.createSMSToken(testNumber)
+        val smsTokenDto = SMSTokenDto(
+            phoneNumber = testNumber,
+            token = "token"
+        )
+
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/sms/verify", smsTokenDto, UnauthorizedException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+            }
+    }
 }

@@ -2,7 +2,11 @@ package com.duckbox.controller
 
 import com.duckbox.domain.user.EmailAuthRepository
 import com.duckbox.dto.user.EmailTokenDto
+import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.errors.exception.UnauthorizedException
+import com.duckbox.errors.exception.UnknownException
 import com.duckbox.service.EmailService
+import io.mockk.every
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
@@ -75,6 +79,17 @@ class EmailControllerTest {
     }
 
     @Test
+    fun is_generateEmailAuth_works_on_MaliException() { // TODO check any() works well...
+        //every { mockEmailSender.send(any()) } answers { UnknownException("Caused by MailException") }
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/email", testEmail, UnknownException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
+            }
+    }
+
+    @Test
     fun is_verifyEmailToken_works_well() {
         //  arrange
         emailService.sendEmailAuth(testEmail)
@@ -96,5 +111,35 @@ class EmailControllerTest {
         }
     }
 
-    // TODO error handling
+    @Test
+    fun is_verifyEmailToken_works_on_NOTFOUND() {
+        //  arrange
+        val emailTokenDto = EmailTokenDto(
+            email = testEmail,
+            token = "token"
+        )
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/email/verify", emailTokenDto, NotFoundException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_verifyEmailToken_works_on_invalidToken() {
+        //  arrange
+        emailService.sendEmailAuth(testEmail)
+        val emailTokenDto = EmailTokenDto(
+            email = testEmail,
+            token = "token"
+        )
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/email/verify", emailTokenDto, UnauthorizedException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.UNAUTHORIZED)
+            }
+    }
+
 }

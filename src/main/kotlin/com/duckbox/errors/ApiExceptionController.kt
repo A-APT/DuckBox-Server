@@ -57,6 +57,18 @@ class ApiExceptionController {
             )
     }
 
+    @ExceptionHandler(UnauthorizedException::class)
+    fun handleUnauthorizedException(unauthorizedException: UnauthorizedException) : ResponseEntity<APIException> {
+        return ResponseEntity
+            .status(HttpStatus.UNAUTHORIZED)
+            .body(
+                APIException(
+                    HttpStatus.UNAUTHORIZED,
+                    unauthorizedException.message!!
+                )
+            )
+    }
+
     @ExceptionHandler(UnknownException::class)
     fun handleUnknownException(unknownErrorException: UnknownException) : ResponseEntity<APIException> {
         return ResponseEntity

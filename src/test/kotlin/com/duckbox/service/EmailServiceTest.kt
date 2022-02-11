@@ -1,6 +1,8 @@
 package com.duckbox.service
 
 import com.duckbox.domain.user.EmailAuthRepository
+import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.errors.exception.UnauthorizedException
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.AfterEach
@@ -69,7 +71,8 @@ class EmailServiceTest {
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
-            // TODO
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("No authentication token for [${testEmail}]")
         }
     }
 
@@ -84,6 +87,7 @@ class EmailServiceTest {
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
+            assertThat(it is UnauthorizedException).isEqualTo(true)
             assertThat(it.message).isEqualTo("Email Authentication Failed: Please check your email or token validation time")
         }
     }
@@ -102,6 +106,7 @@ class EmailServiceTest {
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
+            assertThat(it is UnauthorizedException).isEqualTo(true)
             assertThat(it.message).isEqualTo("Email Authentication Failed: Please check your email or token validation time")
         }
     }

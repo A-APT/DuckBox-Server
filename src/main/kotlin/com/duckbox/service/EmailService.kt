@@ -2,6 +2,9 @@ package com.duckbox.service
 
 import com.duckbox.domain.user.EmailAuth
 import com.duckbox.domain.user.EmailAuthRepository
+import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.errors.exception.UnauthorizedException
+import com.duckbox.errors.exception.UnknownException
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.mail.javamail.JavaMailSender
 import org.springframework.stereotype.Service
@@ -21,7 +24,11 @@ class EmailService (
         message.subject = subject
         message.text = text
 
-        emailSender.send(message)
+        runCatching {
+            emailSender.send(message)
+        }.onFailure {
+            throw UnknownException("Caused by MailException")
+        }
     }
 
     fun sendEmailAuth(targetEmail: String) {
@@ -58,7 +65,11 @@ class EmailService (
         lateinit var emailAuth: EmailAuth
         runCatching {
             emailAuthRepository.findByEmail(targetEmail)
-        }.onSuccess { emailAuth = it }.onFailure { throw it }
+        }.onSuccess {
+            emailAuth = it
+        }.onFailure {
+            throw NotFoundException("No authentication token for [${targetEmail}]")
+        }
 
         // Check email token
         val currentTime = System.currentTimeMillis()
@@ -67,7 +78,7 @@ class EmailService (
             emailAuthRepository.save(emailAuth)
             return true
         } else {
-            throw Exception("Email Authentication Failed: Please check your email or token validation time") // TODO
+            throw UnauthorizedException("Email Authentication Failed: Please check your email or token validation time")
         }
     }
 }

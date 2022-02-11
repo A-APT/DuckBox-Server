@@ -1,7 +1,9 @@
 package com.duckbox.controller
 
+import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.SMSTokenDto
 import com.duckbox.service.SMSService
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
@@ -14,6 +16,12 @@ class SMSController (private val smsService: SMSService) {
     fun generateSMSAuth(@RequestBody targetNumber: String): ResponseEntity<Unit> {
         smsService.sendSMSAuth(targetNumber)
         return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/api/v1/user/sms/token")
+    fun generateSMSAuthAndReturn(@RequestBody targetNumber: String): ResponseEntity<String> {
+        val token = smsService.createSMSToken(targetNumber)
+        return ResponseEntity.status(HttpStatus.OK).body(token)
     }
 
     @PostMapping("/api/v1/user/sms/verify")

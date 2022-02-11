@@ -61,7 +61,7 @@ class SMSControllerTest {
     @Test
     fun is_generateEmailAuth_works_well() {
         // arrange
-        every { mockSMSService.sendMessage(any(), any()) } answers {}
+        //every { mockSMSService.sendMessage(any(), any()) } answers {}
         setSMSService() // set smsService to mockSMSService
 
         // act, assert
@@ -77,6 +77,22 @@ class SMSControllerTest {
             assertThat(expired).isEqualTo(false)
             assertThat(token).isEqualTo(token)
         }
+    }
+
+    @Test
+    fun is_generateEmailAuthAndReturn_works_well() {
+        // act, assert
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/user/sms/token", testNumber, String::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.OK)
+                val smsAuth = smsAuthRepository.findByPhoneNumber(testNumber)
+                smsAuth.apply {
+                    assertThat(phoneNumber).isEqualTo(testNumber)
+                    assertThat(expired).isEqualTo(false)
+                    assertThat(token).isEqualTo(body!!)
+                }
+            }
     }
 
     @Test

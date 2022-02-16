@@ -18,6 +18,7 @@ import org.web3j.protocol.core.methods.response.EthSendTransaction
 import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.tx.RawTransactionManager
 import org.web3j.tx.gas.DefaultGasProvider
+import org.web3j.utils.Convert
 import java.math.BigInteger
 
 @PropertySource("classpath:ethereum.properties")
@@ -79,11 +80,11 @@ class EthereumService(private val web3j: Web3j) {
         val credentials: Credentials = Credentials.create(ownerPrivate)
         val manager = RawTransactionManager(web3j, credentials)
         val ethSend: EthSendTransaction = manager.sendTransaction(
-            DefaultGasProvider.GAS_PRICE, // gasPrice
-            BigInteger.valueOf(8000000), // gasLimit (ropsten)
+            Convert.toWei("1", Convert.Unit.GWEI).toBigInteger(), // gasPrice
+            BigInteger.valueOf(80000), // gasLimit (ropsten)
             contractAddress, // to
             encodedFunction, // data
-            BigInteger.ONE // value
+            BigInteger.ZERO // value
         )
 
         if (ethSend.hasError()){

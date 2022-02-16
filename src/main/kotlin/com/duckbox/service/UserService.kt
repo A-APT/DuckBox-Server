@@ -25,7 +25,7 @@ class UserService (
 
     fun generateUserDID(targetEmail: String, targetNumber: String): String {
         // generate did using SHA-256: current time + email + phone-number
-        val didInfo = "${System.currentTimeMillis()}${targetEmail}${targetNumber}"
+        val didInfo = "${System.currentTimeMillis()}${targetEmail}"
         return hashUtils.SHA256(didInfo)
     }
 

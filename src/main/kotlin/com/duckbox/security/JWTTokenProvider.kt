@@ -19,6 +19,9 @@ class JWTTokenProvider(private val userDetailsService: CustomUserDetailsService)
     @Value("\${jwt.signing.key}")
     private lateinit var SIGNING_KEY: String
 
+    val HEADER_STRING: String = "Authorization"
+    val TOKEN_PREFIX: String = "Bearer"
+
     private val tokenPeriod: Long = 1000L * 60L * 10L // 10 minute
     private val refreshTokenPeriod: Long = 1000L * 60L * 60L * 24L * 30L * 3L // 3 weeks
 
@@ -79,5 +82,20 @@ class JWTTokenProvider(private val userDetailsService: CustomUserDetailsService)
 
     fun getUserPK(jwtToken: String): String {
         return getAllClaimsFromToken(jwtToken).subject
+    }
+
+    fun getTokenFromHeader(headers: Map<String, String>): String? {
+        var token: String = ""
+        runCatching {
+            token = headers[HEADER_STRING]!!
+        }.onFailure {
+            throw UnauthorizedException("JWT Token must included in header $HEADER_STRING")
+        }
+        // Substring Authorization Since the value is in "Authorization":"Bearer JWT_TOKEN" format
+        if (token.startsWith(TOKEN_PREFIX)) {
+            return token.substring(TOKEN_PREFIX.length).trim()
+        } else {
+            throw UnauthorizedException("JWT Token must included in header $HEADER_STRING")
+        }
     }
 }

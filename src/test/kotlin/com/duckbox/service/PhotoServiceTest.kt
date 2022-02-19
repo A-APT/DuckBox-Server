@@ -30,8 +30,8 @@ class PhotoServiceTest {
     }
 
     fun getTestMockMultipart(): MockMultipartFile {
-        val uploadFileName: String = "uploadTest-service.txt"
-        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val uploadFileName: String = "test.txt"
+        val uploadFileContent: ByteArray = "test file!".toByteArray()
         return MockMultipartFile(
             uploadFileName, uploadFileName, "text/plain", uploadFileContent
         )

@@ -29,9 +29,6 @@ class GroupService (
             profileImageId = if (profile != null) photoService.savePhoto(profile!!) else null
             headerImageId = if (header != null) photoService.savePhoto(header!!) else null
         }
-        println(profileImageId)
-        println(headerImageId)
-
 
         // save to server
         groupRepository.save(

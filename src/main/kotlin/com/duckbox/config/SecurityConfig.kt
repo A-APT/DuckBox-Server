@@ -1,5 +1,7 @@
-package com.duckbox.security
+package com.duckbox.config
 
+import com.duckbox.security.JWTTokenProvider
+import com.duckbox.security.JwtAuthenticationFilter
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter
@@ -14,7 +16,7 @@ class SecurityConfig(private val jwtTokenProvider: JWTTokenProvider): WebSecurit
             .headers().frameOptions().disable()
             .and()
                 .authorizeRequests()
-                .antMatchers().hasRole("USER")
+                .antMatchers("/api/v1/group/**").hasRole("USER")
                 .antMatchers("/**").permitAll()
             .and()
                 .addFilterBefore(

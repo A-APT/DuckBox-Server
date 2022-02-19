@@ -13,6 +13,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.springframework.mock.web.MockMultipartFile
 
 @SpringBootTest
 @ExtendWith(SpringExtension::class)
@@ -49,6 +50,29 @@ class GroupServiceTest {
             assertThat(description).isEqualTo(mockRegisterGroupDto.description)
             assertThat(profile).isEqualTo(mockRegisterGroupDto.profile)
             assertThat(header).isEqualTo(mockRegisterGroupDto.header)
+            assertThat(status).isEqualTo(GroupStatus.PENDING)
+            assertThat(menbers).isEqualTo(0)
+        }
+    }
+
+    @Test
+    fun is_registerGroup_works_multipartFile() {
+        // arrange
+        val uploadFileName: String = "uploadTest-service.txt"
+        val uploadFileContent: ByteArray = "file upload test file!".toByteArray()
+        val multipartFile: MockMultipartFile = MockMultipartFile(
+            uploadFileName, uploadFileName, "text/plain", uploadFileContent
+        )
+
+        mockRegisterGroupDto.profile = multipartFile
+        mockRegisterGroupDto.header = multipartFile
+        groupService.registerGroup(mockRegisterGroupDto)
+
+        // assert
+        groupRepository.findByName(mockRegisterGroupDto.name).apply {
+            assertThat(name).isEqualTo(mockRegisterGroupDto.name)
+            assertThat(leader).isEqualTo(mockRegisterGroupDto.leader)
+            assertThat(description).isEqualTo(mockRegisterGroupDto.description)
             assertThat(status).isEqualTo(GroupStatus.PENDING)
             assertThat(menbers).isEqualTo(0)
         }

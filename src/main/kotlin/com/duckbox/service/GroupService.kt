@@ -5,10 +5,14 @@ import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
 import com.duckbox.dto.group.RegisterGroupDto
 import com.duckbox.errors.exception.ConflictException
+import org.bson.types.ObjectId
 import org.springframework.stereotype.Service
 
 @Service
-class GroupService (private val groupRepository: GroupRepository){
+class GroupService (
+    private val groupRepository: GroupRepository,
+    private val photoService: PhotoService
+){
 
     fun registerGroup(registerDto: RegisterGroupDto) {
         // check duplicate
@@ -19,6 +23,16 @@ class GroupService (private val groupRepository: GroupRepository){
             throw ConflictException("Group [${registerDto.name}] is already registered.")
         }
 
+        var profileImageId: ObjectId? = null
+        var headerImageId: ObjectId? = null
+        registerDto.apply {
+            profileImageId = if (profile != null) photoService.savePhoto(profile!!) else null
+            headerImageId = if (header != null) photoService.savePhoto(header!!) else null
+        }
+        println(profileImageId)
+        println(headerImageId)
+
+
         // save to server
         groupRepository.save(
             GroupEntity(
@@ -27,8 +41,8 @@ class GroupService (private val groupRepository: GroupRepository){
                 status = GroupStatus.PENDING,
                 description = registerDto.description,
                 menbers = 0,
-                profile = registerDto.profile,
-                header = registerDto.header
+                profile = profileImageId,
+                header = headerImageId
             )
         )
     }

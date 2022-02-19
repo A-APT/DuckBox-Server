@@ -1,34 +1,20 @@
 package com.duckbox.domain.group
 
+import org.bson.types.ObjectId
+import org.springframework.data.mongodb.core.mapping.Document
 import javax.persistence.*
 
-@Entity
+@Document(collection="group")
 class GroupEntity (
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    var id: Long = -1,
-
-    @Column(nullable = false)
+    var id: ObjectId = ObjectId(),
     var name: String,
-
-    @Column(nullable = false)
     var leader: String, // did
-
-    @Column(nullable = false)
     var status: GroupStatus,
-
-    @Column
     var description: String,
-
-    @Column(nullable = false)
     var menbers: Int,
-
-    @Column
-    var profile: String? = null, // image
-
-    @Column
-    var header: String? = null, // image
-
+    var profile: ObjectId? = null, // image
+    var header: ObjectId? = null, // image
 )
 
 enum class GroupStatus {

@@ -76,6 +76,11 @@ dependencies {
 
     // SMS (coolSMS)
     implementation("net.nurigo:javaSDK:2.2")
+
+    // mongoDB
+    implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
+    implementation("de.flapdoodle.embed:de.flapdoodle.embed.mongo")
+
 }
 
 tasks.test {

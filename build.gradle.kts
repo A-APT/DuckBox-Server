@@ -18,6 +18,54 @@ plugins {
     kotlin("jvm") version "1.4.21"
     kotlin("plugin.jpa") version "1.3.61"
     kotlin("plugin.allopen") version "1.4.21"
+    id("jacoco")
+}
+
+jacoco {
+    toolVersion = "0.8.7"
+}
+
+tasks.jacocoTestReport {
+    reports {
+        html.isEnabled = true
+        xml.isEnabled = false
+        csv.isEnabled = true
+    }
+    finalizedBy("jacocoTestCoverageVerification")
+}
+
+tasks.jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            enabled = true
+            element = "CLASS"
+
+            limit {
+                counter = "BRANCH"
+                value = "COVEREDRATIO"
+                minimum = "0.90".toBigDecimal()
+            }
+
+            limit {
+                counter = "LINE"
+                value = "COVEREDRATIO"
+                minimum = "0.90".toBigDecimal()
+            }
+
+            limit {
+                counter = "LINE"
+                value = "TOTALCOUNT"
+                maximum = "200".toBigDecimal()
+            }
+            excludes = listOf(
+                "com.duckbox.ApplicationKt",
+                "com.duckbox.config.**",
+                "com.duckbox.domain.**",
+                "com.duckbox.security.**", //
+                "com.duckbox.errors.**"
+            )
+        }
+    }
 }
 
 noArg {
@@ -72,7 +120,6 @@ dependencies {
 
     // Ethereum
     implementation("org.web3j:core:4.5.11")
-    testImplementation("org.web3j:web3j-unit:4.5.11")
 
     // SMS (coolSMS)
     implementation("net.nurigo:javaSDK:2.2")
@@ -87,10 +134,10 @@ dependencies {
 }
 
 tasks.test {
-    useJUnit()
+    useJUnitPlatform() // junit 5
+    finalizedBy("jacocoTestReport")
 }
 
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "1.8"
+tasks.withType<KotlinCompile> { // include compileTestKotlin
+    kotlinOptions.jvmTarget = JavaVersion.VERSION_1_8.toString()
 }

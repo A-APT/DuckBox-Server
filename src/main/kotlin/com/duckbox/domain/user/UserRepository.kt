@@ -11,5 +11,5 @@ interface UserRepository: JpaRepository<User, Long> {
     fun findByPhoneNumber(phoneNumber: String): User
     fun findByNickname(nickname: String): User
     fun findAllByCollege(college: String): MutableList<User>
-    fun findAllByDepartment(department: String): MutableList<User>
+    fun findAllByDepartmentIn(department: List<String>) : MutableList<User>
 }

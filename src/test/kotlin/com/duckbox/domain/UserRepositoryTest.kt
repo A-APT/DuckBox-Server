@@ -26,7 +26,7 @@ class UserRepositoryTest {
         phoneNumber = "01012341234",
         nickname = "duck",
         college = "ku",
-        department = "computer",
+        department = listOf("computer", "software"),
         roles = setOf("ROLE_USER")
     )
 
@@ -57,7 +57,7 @@ class UserRepositoryTest {
 
         // assert
         assertThat(userRepository.findAllByCollege(mockUser.college).size).isEqualTo(2)
-        assertThat(userRepository.findAllByDepartment(mockUser.department).size).isEqualTo(2)
+        assertThat(userRepository.findAllByDepartmentIn(listOf(mockUser.department[0])).size).isEqualTo(2)
     }
 
 }

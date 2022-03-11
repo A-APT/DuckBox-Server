@@ -27,7 +27,7 @@ class User (
     @Column(nullable = false)
     var email: String,
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     var phoneNumber: String,
 
     @Column(nullable = false)
@@ -36,11 +36,12 @@ class User (
     @Column(nullable = false)
     var college: String,
 
-    @Column(nullable = false)
-    var department: String,
+    @ElementCollection(fetch = FetchType.EAGER)
+    var department: List<String>,
 
     @ElementCollection(fetch = FetchType.EAGER)
     var roles: Set<String>
+
 ): UserDetails {
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {
         return roles.stream()

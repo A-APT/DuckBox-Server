@@ -53,7 +53,7 @@ class UserControllerTest {
         phoneNumber = "01012341234",
         nickname = "duck",
         college = "ku",
-        department = "computer"
+        department = listOf("computer", "software")
     )
 
     @Test

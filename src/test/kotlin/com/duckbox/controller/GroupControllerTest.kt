@@ -83,7 +83,7 @@ class GroupControllerTest {
             phoneNumber = "01012341234",
             nickname = "duck",
             college = "ku",
-            department = "computer"
+            department = listOf("computer", "software")
         ))
         return userService.login(
             LoginRequestDto(email = "email@konkuk.ac.kr", password = "test")

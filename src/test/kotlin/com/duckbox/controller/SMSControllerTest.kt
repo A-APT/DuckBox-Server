@@ -53,19 +53,23 @@ class SMSControllerTest {
         smsAuthRepository.deleteAll()
     }
 
-    // Set private emailSender
-    private fun setSMSService() {
+    // Set SMSService of smsController
+    private fun setSMSService(smsService: SMSService) {
         SMSController::class.java.getDeclaredField("smsService").apply {
             isAccessible = true
-            set(smsController, mockSMSService)
+            set(smsController, smsService)
         }
     }
 
     @Test
     fun is_generateEmailAuth_works_well() { // TODO check any() works well...
         // arrange
-        //every { mockSMSService.sendMessage(any(), any()) } answers {}
-        setSMSService() // set smsService to mockSMSService
+        every { mockSMSService.sendMessage(any(), any()) } answers {}
+        every { mockSMSService.sendSMSAuth(any())} answers {
+            smsService.createSMSToken(testNumber)
+            mockSMSService.sendMessage(testNumber, "txt")
+        }
+        setSMSService(mockSMSService) // set smsService to mockSMSService
 
         // act, assert
         restTemplate
@@ -80,13 +84,18 @@ class SMSControllerTest {
             assertThat(expired).isEqualTo(false)
             assertThat(token).isEqualTo(token)
         }
+        setSMSService(smsService) // set mockSMSService to smsService
     }
 
     @Test
     fun is_generateEmailAuth_works_sendMessage_error() { // TODO check any() works well...
         // arrange
-        //every { mockSMSService.sendMessage(any(), any()) } answers { UnknownException("Caused by CoolsmsException") }
-        setSMSService() // set smsService to mockSMSService
+        every { mockSMSService.sendMessage(any(), any()) } throws UnknownException("Caused by CoolsmsException")
+        every { mockSMSService.sendSMSAuth(any())} answers {
+            smsService.createSMSToken(testNumber)
+            mockSMSService.sendMessage(testNumber, "txt")
+        }
+        setSMSService(mockSMSService) // set smsService to mockSMSService
 
         // act, assert
         restTemplate
@@ -94,6 +103,7 @@ class SMSControllerTest {
             .apply {
                 assertThat(statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
             }
+        setSMSService(smsService) // set mockSMSService to smsService
     }
 
     @Test
@@ -113,7 +123,7 @@ class SMSControllerTest {
     }
 
     @Test
-    fun is_verifyEmailToken_works_well() {
+    fun is_verifySMSToken_works_well() {
         //  arrange
         smsService.createSMSToken(testNumber)
         val token = smsAuthRepository.findByPhoneNumber(testNumber).token

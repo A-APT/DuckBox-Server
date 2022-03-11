@@ -7,6 +7,7 @@ import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.errors.exception.UnknownException
 import com.duckbox.service.EmailService
 import io.mockk.every
+import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
@@ -32,11 +33,17 @@ class EmailControllerTest {
     @RelaxedMockK
     private lateinit var mockEmailSender: JavaMailSender
 
+    @MockK
+    private lateinit var mockEmailService: EmailService
+
     @Autowired
     private lateinit var emailAuthRepository: EmailAuthRepository
 
     @Autowired
     private lateinit var emailService: EmailService
+
+    @Autowired
+    private lateinit var emailController: EmailController
 
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
@@ -61,6 +68,14 @@ class EmailControllerTest {
         }
     }
 
+    // Set emailService of emailController
+    private fun setEmailService(emailService: EmailService) {
+        EmailController::class.java.getDeclaredField("emailService").apply {
+            isAccessible = true
+            set(emailController, emailService)
+        }
+    }
+
     @Test
     fun is_generateEmailAuth_works_well() {
         // act, assert
@@ -79,20 +94,24 @@ class EmailControllerTest {
     }
 
     @Test
-    fun is_generateEmailAuth_works_on_MaliException() { // TODO check any() works well...
-        //every { mockEmailSender.send(any()) } answers { UnknownException("Caused by MailException") }
+    fun is_generateEmailAuth_works_on_MailException() {
+        // arrange
+        every { mockEmailService.sendEmailAuth(testEmail) } throws UnknownException("Caused by MailException")
+        setEmailService(mockEmailService) // set emailService to mockEmailService
+
         // act, assert
         restTemplate
             .postForEntity("${baseAddress}/api/v1/user/email", testEmail, UnknownException::class.java)
             .apply {
                 assertThat(statusCode).isEqualTo(HttpStatus.INTERNAL_SERVER_ERROR)
             }
+        setEmailService(emailService) // set mockEmailService to emailService
     }
 
     @Test
     fun is_verifyEmailToken_works_well() {
         //  arrange
-        emailService.sendEmailAuth(testEmail)
+        emailService.createEmailToken(testEmail)
         val token = emailAuthRepository.findByEmail(testEmail).token
         val emailTokenDto = EmailTokenDto(
             email = testEmail,

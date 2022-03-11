@@ -9,15 +9,15 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 
-@SpringBootTest
-@ExtendWith(SpringExtension::class)
+// @SpringBootTest
+// @ExtendWith(SpringExtension::class)
 class DidServiceTest {
     @Autowired
     private lateinit var didService: DIdService
 
     private val did = "did.test2"
 
-    @Test
+    //@Test
     fun is_registerDId_works_well() {
         // arrange
         didService.registerDid(did = did)
@@ -31,7 +31,7 @@ class DidServiceTest {
         didService.removeDid(did = did)
     }
 
-    @Test
+    //@Test
     fun is_registerDId_works_on_duplicate() {
         didService.registerDid(did = did)
         runCatching {
@@ -46,7 +46,7 @@ class DidServiceTest {
         didService.removeDid(did = did)
     }
 
-    @Test
+    //@Test
     fun is_removeDid_works_well() {
         // arrange
         didService.registerDid(did = did)
@@ -64,7 +64,7 @@ class DidServiceTest {
         }
     }
 
-    @Test
+    //@Test
     fun is_getOwner_works_well() {
         didService.getOwner().apply {
             println(this)

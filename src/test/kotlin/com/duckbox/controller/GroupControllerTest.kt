@@ -1,6 +1,7 @@
 package com.duckbox.controller
 
 import com.duckbox.domain.group.GroupRepository
+import com.duckbox.domain.user.UserRepository
 import com.duckbox.dto.group.RegisterGroupDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.RegisterDto
@@ -40,6 +41,9 @@ class GroupControllerTest {
     private lateinit var groupService: GroupService
 
     @Autowired
+    private lateinit var userRepository: UserRepository
+
+    @Autowired
     private lateinit var userService: UserService
 
     @Autowired
@@ -66,6 +70,7 @@ class GroupControllerTest {
         baseAddress = "http://localhost:${port}"
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
         groupRepository.deleteAll()
+        userRepository.deleteAll()
     }
 
     fun registerAndLogin(): String {

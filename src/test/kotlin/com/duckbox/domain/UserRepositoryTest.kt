@@ -45,7 +45,7 @@ class UserRepositoryTest {
         assertThat(userRepository.findByDid(mockUser.did).did).isEqualTo(mockUser.did)
         assertThat(userRepository.findByStudentId(mockUser.studentId).studentId).isEqualTo(mockUser.studentId)
         assertThat(userRepository.findByEmail(mockUser.email).email).isEqualTo(mockUser.email)
-        assertThat(userRepository.findByPhoneNumber(mockUser.phoneNumber).phoneNumber).isEqualTo(mockUser.phoneNumber)
+        assertThat(userRepository.findByPhoneNumber(mockUser.phoneNumber!!).phoneNumber).isEqualTo(mockUser.phoneNumber)
         assertThat(userRepository.findByNickname(mockUser.nickname).nickname).isEqualTo(mockUser.nickname)
     }
 

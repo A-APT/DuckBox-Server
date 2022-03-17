@@ -28,7 +28,7 @@ class User (
     var email: String,
 
     @Column(nullable = true)
-    var phoneNumber: String,
+    var phoneNumber: String?,
 
     @Column(nullable = false)
     var nickname: String,

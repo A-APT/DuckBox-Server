@@ -32,7 +32,7 @@ class UserService (
     private val didService: DIdService
     ) {
 
-    fun generateUserDID(targetEmail: String, targetNumber: String): String {
+    fun generateUserDID(targetEmail: String): String {
         // generate did using SHA-256: current time + email + phone-number
         val didInfo = "${System.currentTimeMillis()}${targetEmail}"
         return hashUtils.SHA256(didInfo)
@@ -47,7 +47,7 @@ class UserService (
         }
 
         // send transaction
-        val did = generateUserDID(registerDto.email, registerDto.phoneNumber)
+        val did = generateUserDID(registerDto.email)
         //didService.registerDid(did)
 
         // save to server

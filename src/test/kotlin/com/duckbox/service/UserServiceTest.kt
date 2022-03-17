@@ -1,6 +1,6 @@
 package com.duckbox.service
 
-import com.duckbox.MockUser
+import com.duckbox.MockDto
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.user.User
 import com.duckbox.domain.user.UserBox
@@ -54,6 +54,8 @@ class UserServiceTest {
     @Autowired
     private lateinit var jwtTokenProvider: JWTTokenProvider
 
+    private val mockRegisterDto: RegisterDto = MockDto.mockRegisterDto
+
     @BeforeEach
     @AfterEach
     fun init() {
@@ -62,17 +64,6 @@ class UserServiceTest {
         groupRepository.deleteAll()
         voteRepository.deleteAll()
     }
-
-    val mockRegisterDto = RegisterDto(
-        studentId = 2019333,
-        name = "je",
-        password = "test",
-        email = "email@konkuk.ac.kr",
-        phoneNumber = "01012341234",
-        nickname = "duck",
-        college = "ku",
-        department = listOf("computer", "software")
-    )
 
     @Test
     fun is_register_works_well() {
@@ -212,7 +203,7 @@ class UserServiceTest {
     fun is_joinGroup_works_well() {
         // arrange
         userService.register(mockRegisterDto)
-        val groupId = groupService.registerGroup(MockUser.mockRegisterGroupDto)
+        val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
 
         // act
         userService.joinGroup(mockRegisterDto.email, groupId)
@@ -227,7 +218,7 @@ class UserServiceTest {
     @Test
     fun is_joinGroup_works_on_invalid_user() {
         // arrange
-        val groupId = groupService.registerGroup(MockUser.mockRegisterGroupDto)
+        val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
 
         // act & assert
         runCatching {
@@ -261,7 +252,7 @@ class UserServiceTest {
     fun is_joinVote_works_well() {
         // arrange
         userService.register(mockRegisterDto)
-        val voteId = voteService.registerVote(MockUser.mockVoteRegisterDto)
+        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
 
         // act
         userService.joinVote(mockRegisterDto.email, voteId)
@@ -276,7 +267,7 @@ class UserServiceTest {
     @Test
     fun is_joinVote_works_on_invalid_user() {
         // arrange
-        val voteId = voteService.registerVote(MockUser.mockVoteRegisterDto)
+        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
 
         // act & assert
         runCatching {

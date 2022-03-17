@@ -61,8 +61,10 @@ tasks.jacocoTestCoverageVerification {
                 "com.duckbox.ApplicationKt",
                 "com.duckbox.config.**",
                 "com.duckbox.domain.**",
-                "com.duckbox.security.**", //
-                "com.duckbox.errors.**"
+                "com.duckbox.dto.**",
+                "com.duckbox.errors.**",
+                "com.duckbox.security.JWTTokenProvider**", //
+                "com.duckbox.service.ethereum.**" //
             )
         }
     }

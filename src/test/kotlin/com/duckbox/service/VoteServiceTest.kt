@@ -1,5 +1,6 @@
 package com.duckbox.service
 
+import com.duckbox.MockDto
 import com.duckbox.domain.photo.PhotoRepository
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.vote.VoteRegisterDto
@@ -12,7 +13,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import java.util.*
 
 @SpringBootTest
 @ExtendWith(SpringExtension::class)
@@ -26,19 +26,7 @@ class VoteServiceTest {
     @Autowired
     private lateinit var voteService: VoteService
 
-    private val mockVoteRegisterDto = VoteRegisterDto(
-        title = "title",
-        content = "content",
-        isGroup = false,
-        groupId = null,
-        startTime = Date(),
-        finishTime = Date(),
-        images = listOf(),
-        candidates = listOf("a", "b"),
-        voters = listOf(1, 2),
-        reward = false,
-        notice = false
-    )
+    private val mockVoteRegisterDto: VoteRegisterDto = MockDto.mockVoteRegisterDto
 
     @BeforeEach
     @AfterEach
@@ -64,16 +52,17 @@ class VoteServiceTest {
     @Test
     fun is_registerVote_works_multipartFile() {
         // arrange
-        mockVoteRegisterDto.images = listOf("test file!".toByteArray())
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy()
+        mockDto.images = listOf("test file!".toByteArray())
 
         // act
-        val id = voteService.registerVote(mockVoteRegisterDto)
+        val id = voteService.registerVote(mockDto)
 
         // assert
         voteRepository.findById(id).get().apply {
-            assertThat(title).isEqualTo(mockVoteRegisterDto.title)
-            assertThat(content).isEqualTo(mockVoteRegisterDto.content)
-            assertThat(isGroup).isEqualTo(mockVoteRegisterDto.isGroup)
+            assertThat(title).isEqualTo(mockDto.title)
+            assertThat(content).isEqualTo(mockDto.content)
+            assertThat(isGroup).isEqualTo(mockDto.isGroup)
             assertThat(images.size).isEqualTo(1)
             assertThat(photoRepository.findById(images[0]).isPresent).isEqualTo(true)
         }

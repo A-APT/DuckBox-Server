@@ -1,5 +1,6 @@
 package com.duckbox.controller
 
+import com.duckbox.MockDto
 import com.duckbox.domain.photo.PhotoRepository
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.VoteRepository
@@ -18,7 +19,6 @@ import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.http.*
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import java.util.*
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ExtendWith(SpringExtension::class)
@@ -44,19 +44,7 @@ class VoteControllerTest {
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
 
-    private val mockVoteRegisterDto = VoteRegisterDto(
-        title = "title",
-        content = "content",
-        isGroup = false,
-        groupId = null,
-        startTime = Date(),
-        finishTime = Date(),
-        images = listOf(),
-        candidates = listOf("a", "b"),
-        voters = listOf(1, 2),
-        reward = false,
-        notice = false
-    )
+    private val mockVoteRegisterDto: VoteRegisterDto = MockDto.mockVoteRegisterDto
 
     @BeforeEach
     @AfterEach
@@ -135,8 +123,9 @@ class VoteControllerTest {
         val httpHeaders = HttpHeaders()
         httpHeaders["Authorization"] = "Bearer $token"
 
-        mockVoteRegisterDto.images = listOf("test file!".toByteArray())
-        val httpEntity = HttpEntity<VoteRegisterDto>(mockVoteRegisterDto, httpHeaders)
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy()
+        mockDto.images = listOf("test file!".toByteArray())
+        val httpEntity = HttpEntity<VoteRegisterDto>(mockDto, httpHeaders)
 
         // act, assert
         restTemplate

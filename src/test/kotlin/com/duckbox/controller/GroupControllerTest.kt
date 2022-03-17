@@ -1,5 +1,6 @@
 package com.duckbox.controller
 
+import com.duckbox.MockDto
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.photo.PhotoRepository
 import com.duckbox.domain.user.UserRepository
@@ -43,13 +44,7 @@ class GroupControllerTest {
 
     private lateinit var baseAddress: String
 
-    private val mockRegisterGroupDto = GroupRegisterDto(
-        name = "testingGroup",
-        leader = "did",
-        description = "testing !",
-        profile = null,
-        header = null
-    )
+    private val mockGroupRegisterDto: GroupRegisterDto = MockDto.mockGroupRegisterDto
 
     @BeforeEach
     @AfterEach
@@ -81,7 +76,7 @@ class GroupControllerTest {
     fun is_registerGroup_works_no_headers_token() {
         // act, assert
         restTemplate
-            .postForEntity("${baseAddress}/api/v1/group/register", mockRegisterGroupDto, Unit::class.java)
+            .postForEntity("${baseAddress}/api/v1/group/register", mockGroupRegisterDto, Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
@@ -93,7 +88,7 @@ class GroupControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer INVALID_TOKEN"
         }
-        val httpEntity = HttpEntity<GroupRegisterDto>(mockRegisterGroupDto, httpHeaders)
+        val httpEntity = HttpEntity<GroupRegisterDto>(mockGroupRegisterDto, httpHeaders)
 
         // act, assert
         restTemplate
@@ -110,7 +105,7 @@ class GroupControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val httpEntity = HttpEntity<GroupRegisterDto>(mockRegisterGroupDto, httpHeaders)
+        val httpEntity = HttpEntity<GroupRegisterDto>(mockGroupRegisterDto, httpHeaders)
 
         // act, assert
         restTemplate
@@ -127,9 +122,10 @@ class GroupControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        mockRegisterGroupDto.profile = "profile file!".toByteArray()
-        mockRegisterGroupDto.header = "header file!".toByteArray()
-        val httpEntity = HttpEntity<GroupRegisterDto>(mockRegisterGroupDto, httpHeaders)
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy()
+        mockDto.profile = "profile file!".toByteArray()
+        mockDto.header = "header file!".toByteArray()
+        val httpEntity = HttpEntity<GroupRegisterDto>(mockDto, httpHeaders)
 
         // act, assert
         restTemplate

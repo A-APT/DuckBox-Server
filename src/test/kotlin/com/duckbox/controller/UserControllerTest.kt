@@ -1,5 +1,6 @@
 package com.duckbox.controller
 
+import com.duckbox.MockDto
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.dto.JWTToken
 import com.duckbox.dto.user.LoginRequestDto
@@ -9,7 +10,6 @@ import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.service.UserService
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Before
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -38,23 +38,14 @@ class UserControllerTest {
 
     private lateinit var baseAddress: String
 
+    private val mockRegisterDto: RegisterDto = MockDto.mockRegisterDto
+
     @BeforeEach
     @AfterEach
     fun initTest() {
         baseAddress = "http://localhost:${port}"
         userRepository.deleteAll()
     }
-
-    val mockRegisterDto = RegisterDto(
-        studentId = 2019333,
-        name = "je",
-        password = "test",
-        email = "email@konkuk.ac.kr",
-        phoneNumber = "01012341234",
-        nickname = "duck",
-        college = "ku",
-        department = listOf("computer", "software")
-    )
 
     @Test
     fun is_register_works_well() {

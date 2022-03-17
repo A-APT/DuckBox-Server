@@ -1,5 +1,6 @@
 package com.duckbox.service
 
+import com.duckbox.MockDto
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
 import com.duckbox.domain.photo.PhotoRepository
@@ -27,13 +28,7 @@ class GroupServiceTest {
     @Autowired
     private lateinit var groupService: GroupService
 
-    private val mockRegisterGroupDto = GroupRegisterDto(
-        name = "testingGroup",
-        leader = "did",
-        description = "testing !",
-        profile = null,
-        header = null
-    )
+    private val mockGroupRegisterDto: GroupRegisterDto = MockDto.mockGroupRegisterDto
 
     @BeforeEach
     @AfterEach
@@ -45,15 +40,15 @@ class GroupServiceTest {
     @Test
     fun is_registerGroup_works_well() {
         // act
-        groupService.registerGroup(mockRegisterGroupDto)
+        groupService.registerGroup(mockGroupRegisterDto)
 
         // assert
-        groupRepository.findByName(mockRegisterGroupDto.name).apply {
-            assertThat(name).isEqualTo(mockRegisterGroupDto.name)
-            assertThat(leader).isEqualTo(mockRegisterGroupDto.leader)
-            assertThat(description).isEqualTo(mockRegisterGroupDto.description)
-            assertThat(profile).isEqualTo(mockRegisterGroupDto.profile)
-            assertThat(header).isEqualTo(mockRegisterGroupDto.header)
+        groupRepository.findByName(mockGroupRegisterDto.name).apply {
+            assertThat(name).isEqualTo(mockGroupRegisterDto.name)
+            assertThat(leader).isEqualTo(mockGroupRegisterDto.leader)
+            assertThat(description).isEqualTo(mockGroupRegisterDto.description)
+            assertThat(profile).isEqualTo(mockGroupRegisterDto.profile)
+            assertThat(header).isEqualTo(mockGroupRegisterDto.header)
             assertThat(status).isEqualTo(GroupStatus.PENDING)
             assertThat(menbers).isEqualTo(0)
         }
@@ -62,17 +57,18 @@ class GroupServiceTest {
     @Test
     fun is_registerGroup_works_multipartFile() {
         // arrange
-        mockRegisterGroupDto.profile = "profile file!".toByteArray()
-        mockRegisterGroupDto.header = "header file!".toByteArray()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy()
+        mockDto.profile = "profile file!".toByteArray()
+        mockDto.header = "header file!".toByteArray()
 
         // act
-        groupService.registerGroup(mockRegisterGroupDto)
+        groupService.registerGroup(mockDto)
 
         // assert
-        groupRepository.findByName(mockRegisterGroupDto.name).apply {
-            assertThat(name).isEqualTo(mockRegisterGroupDto.name)
-            assertThat(leader).isEqualTo(mockRegisterGroupDto.leader)
-            assertThat(description).isEqualTo(mockRegisterGroupDto.description)
+        groupRepository.findByName(mockDto.name).apply {
+            assertThat(name).isEqualTo(mockDto.name)
+            assertThat(leader).isEqualTo(mockDto.leader)
+            assertThat(description).isEqualTo(mockDto.description)
             assertThat(status).isEqualTo(GroupStatus.PENDING)
             assertThat(menbers).isEqualTo(0)
             assertThat(photoRepository.findById(profile).isPresent).isEqualTo(true)
@@ -83,16 +79,16 @@ class GroupServiceTest {
     @Test
     fun is_registerGroup_works_duplicate_group() {
         // arrange
-        groupService.registerGroup(mockRegisterGroupDto)
+        groupService.registerGroup(mockGroupRegisterDto)
 
         // act & assert
         runCatching {
-            groupService.registerGroup(mockRegisterGroupDto)
+            groupService.registerGroup(mockGroupRegisterDto)
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
             assertThat(it is ConflictException)
-            assertThat(it.message).isEqualTo("Group [${mockRegisterGroupDto.name}] is already registered.")
+            assertThat(it.message).isEqualTo("Group [${mockGroupRegisterDto.name}] is already registered.")
         }
     }
 

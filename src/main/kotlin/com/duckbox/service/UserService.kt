@@ -1,7 +1,12 @@
 package com.duckbox.service
 
+import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.user.User
+import com.duckbox.domain.user.UserBox
+import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.domain.vote.VoteEntity
+import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.JWTToken
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
@@ -11,6 +16,7 @@ import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.security.JWTTokenProvider
 import com.duckbox.service.ethereum.DIdService
 import com.duckbox.utils.HashUtils
+import org.bson.types.ObjectId
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
@@ -18,6 +24,9 @@ import org.springframework.stereotype.Service
 @Service
 class UserService (
     private val userRepository: UserRepository,
+    private val userBoxRepository: UserBoxRepository,
+    private val groupRepository: GroupRepository,
+    private val voteRepository: VoteRepository,
     private val jwtTokenProvider: JWTTokenProvider,
     private val hashUtils: HashUtils,
     private val didService: DIdService
@@ -42,7 +51,7 @@ class UserService (
         //didService.registerDid(did)
 
         // save to server
-        userRepository.save(
+        val id = userRepository.save(
             User(
                 did = did,
                 studentId = registerDto.studentId,
@@ -54,6 +63,14 @@ class UserService (
                 college = registerDto.college,
                 department = registerDto.department,
                 roles = setOf("ROLE_USER")
+            )
+        ).id
+        userBoxRepository.save(
+            UserBox(
+                id = id,
+                email = registerDto.email,
+                groups = mutableListOf(),
+                votes = mutableListOf(),
             )
         )
     }
@@ -91,4 +108,43 @@ class UserService (
                 JWTToken(token = jwtToken.token, refreshToken = jwtToken.refreshToken)
             )
     }
+
+    fun joinGroup(userEmail: String, groupId: ObjectId) {
+        // Find user
+        lateinit var userBox: UserBox
+        runCatching {
+            userBoxRepository.findByEmail(userEmail)
+        }.onSuccess {
+            userBox = it
+        }.onFailure {
+            throw NotFoundException("User [${userEmail}] was not registered.")
+        }
+
+        // Check voteId is valid
+        if (groupRepository.findById(groupId).isEmpty)
+            throw NotFoundException("Invalid GroupId: [${groupId}]")
+
+        userBox.groups.add(groupId)
+        userBoxRepository.save(userBox)
+    }
+
+    fun joinVote(userEmail: String, voteId: ObjectId) {
+        // Find user
+        lateinit var userBox: UserBox
+        runCatching {
+            userBoxRepository.findByEmail(userEmail)
+        }.onSuccess {
+            userBox = it
+        }.onFailure {
+            throw NotFoundException("User [${userEmail}] was not registered.")
+        }
+
+        // Check voteId is valid
+        if (voteRepository.findById(voteId).isEmpty)
+            throw NotFoundException("Invalid VoteId: [${voteId}]")
+
+        userBox.votes.add(voteId)
+        userBoxRepository.save(userBox)
+    }
+
 }

@@ -1,7 +1,12 @@
 package com.duckbox.service
 
+import com.duckbox.MockUser
+import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.user.User
+import com.duckbox.domain.user.UserBox
+import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.JWTToken
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
@@ -12,6 +17,7 @@ import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.security.JWTTokenProvider
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
+import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -28,7 +34,22 @@ class UserServiceTest {
     private lateinit var userService: UserService
 
     @Autowired
+    private lateinit var groupService: GroupService
+
+    @Autowired
+    private lateinit var voteService: VoteService
+
+    @Autowired
     private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var groupRepository: GroupRepository
+
+    @Autowired
+    private lateinit var voteRepository: VoteRepository
+
+    @Autowired
+    private lateinit var userBoxRepository: UserBoxRepository
 
     @Autowired
     private lateinit var jwtTokenProvider: JWTTokenProvider
@@ -37,6 +58,9 @@ class UserServiceTest {
     @AfterEach
     fun init() {
         userRepository.deleteAll()
+        userBoxRepository.deleteAll()
+        groupRepository.deleteAll()
+        voteRepository.deleteAll()
     }
 
     val mockRegisterDto = RegisterDto(
@@ -59,6 +83,12 @@ class UserServiceTest {
         val user: User = userRepository.findByEmail(mockRegisterDto.email)
         assertThat(user.email).isEqualTo(mockRegisterDto.email)
         assertThat(user.password).isEqualTo(mockRegisterDto.password)
+
+        val userBox: UserBox = userBoxRepository.findByEmail(mockRegisterDto.email)
+        assertThat(userBox.id).isEqualTo(user.id)
+        assertThat(userBox.email).isEqualTo(mockRegisterDto.email)
+        assertThat(userBox.groups.size).isEqualTo(0)
+        assertThat(userBox.votes.size).isEqualTo(0)
     }
 
     @Test
@@ -175,6 +205,104 @@ class UserServiceTest {
         }.onFailure {
             assertThat(it is UnauthorizedException).isEqualTo(true)
             assertThat(it.message).isEqualTo("Failed when refresh token.")
+        }
+    }
+
+    @Test
+    fun is_joinGroup_works_well() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val groupId = groupService.registerGroup(MockUser.mockRegisterGroupDto)
+
+        // act
+        userService.joinGroup(mockRegisterDto.email, groupId)
+
+        // assert
+        userBoxRepository.findByEmail(mockRegisterDto.email).apply {
+            assertThat(groups.size).isEqualTo(1)
+            assertThat(groups[0]).isEqualTo(groupId)
+        }
+    }
+
+    @Test
+    fun is_joinGroup_works_on_invalid_user() {
+        // arrange
+        val groupId = groupService.registerGroup(MockUser.mockRegisterGroupDto)
+
+        // act & assert
+        runCatching {
+            userService.joinGroup(mockRegisterDto.email, groupId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [${mockRegisterDto.email}] was not registered.")
+        }
+    }
+
+    @Test
+    fun is_joinGroup_works_on_invalid_groupId() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val invalidGroupId = ObjectId()
+
+        // act & assert
+        runCatching {
+            userService.joinGroup(mockRegisterDto.email, invalidGroupId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Invalid GroupId: [${invalidGroupId}]")
+        }
+    }
+
+    @Test
+    fun is_joinVote_works_well() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val voteId = voteService.registerVote(MockUser.mockVoteRegisterDto)
+
+        // act
+        userService.joinVote(mockRegisterDto.email, voteId)
+
+        // assert
+        userBoxRepository.findByEmail(mockRegisterDto.email).apply {
+            assertThat(votes.size).isEqualTo(1)
+            assertThat(votes[0]).isEqualTo(voteId)
+        }
+    }
+
+    @Test
+    fun is_joinVote_works_on_invalid_user() {
+        // arrange
+        val voteId = voteService.registerVote(MockUser.mockVoteRegisterDto)
+
+        // act & assert
+        runCatching {
+            userService.joinVote(mockRegisterDto.email, voteId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [${mockRegisterDto.email}] was not registered.")
+        }
+    }
+
+    @Test
+    fun is_joinVote_works_on_invalid_groupId() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val invalidVoteId = ObjectId()
+
+        // act & assert
+        runCatching {
+            userService.joinVote(mockRegisterDto.email, invalidVoteId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Invalid VoteId: [${invalidVoteId}]")
         }
     }
 }

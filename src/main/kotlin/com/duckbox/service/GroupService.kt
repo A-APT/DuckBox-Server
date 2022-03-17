@@ -14,7 +14,7 @@ class GroupService (
     private val photoService: PhotoService
 ){
 
-    fun registerGroup(registerDto: GroupRegisterDto) {
+    fun registerGroup(registerDto: GroupRegisterDto): ObjectId {
         // check duplicate
         // Group name is unique, so...
         runCatching {
@@ -31,7 +31,7 @@ class GroupService (
         }
 
         // save to server
-        groupRepository.save(
+        return groupRepository.save(
             GroupEntity(
                 name = registerDto.name,
                 leader = registerDto.leader,
@@ -41,6 +41,6 @@ class GroupService (
                 profile = profileImageId,
                 header = headerImageId
             )
-        )
+        ).id
     }
 }

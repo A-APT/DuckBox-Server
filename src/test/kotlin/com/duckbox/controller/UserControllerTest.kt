@@ -1,15 +1,21 @@
 package com.duckbox.controller
 
 import com.duckbox.MockDto
+import com.duckbox.domain.group.GroupRepository
+import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.JWTToken
-import com.duckbox.dto.user.LoginRequestDto
-import com.duckbox.dto.user.LoginResponseDto
-import com.duckbox.dto.user.RegisterDto
+import com.duckbox.dto.group.GroupRegisterDto
+import com.duckbox.dto.user.*
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
+import com.duckbox.service.GroupService
 import com.duckbox.service.UserService
+import com.duckbox.service.VoteService
+import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -18,6 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
+import org.springframework.http.HttpEntity
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 
@@ -31,7 +40,22 @@ class UserControllerTest {
     private lateinit var userRepository: UserRepository
 
     @Autowired
+    private lateinit var userBoxRepository: UserBoxRepository
+
+    @Autowired
+    private lateinit var groupRepository: GroupRepository
+
+    @Autowired
+    private lateinit var voteRepository: VoteRepository
+
+    @Autowired
     private lateinit var userService: UserService
+
+    @Autowired
+    private lateinit var groupService: GroupService
+
+    @Autowired
+    private lateinit var voteService: VoteService
 
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
@@ -45,6 +69,16 @@ class UserControllerTest {
     fun initTest() {
         baseAddress = "http://localhost:${port}"
         userRepository.deleteAll()
+        userBoxRepository.deleteAll()
+        groupRepository.deleteAll()
+        voteRepository.deleteAll()
+    }
+
+    fun registerAndLogin(): String {
+        userService.register(mockRegisterDto)
+        return userService
+            .login(LoginRequestDto(mockRegisterDto.email, mockRegisterDto.password))
+            .body!!.token
     }
 
     @Test
@@ -164,6 +198,139 @@ class UserControllerTest {
             .body!!
             .apply {
                 assertThat(message).isEqualTo("Failed when refresh token.")
+            }
+    }
+
+    @Test
+    fun is_joinGroup_works_no_authToken_header() {
+        // arrange
+        val httpEntity = HttpEntity(JoinGroupRequestDto("email", groupId = ObjectId()), HttpHeaders())
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/user/group", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_joinGroup_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
+        val httpEntity = HttpEntity(JoinGroupRequestDto(mockRegisterDto.email, groupId = groupId), httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/user/group", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+            }
+    }
+
+    @Test
+    fun is_joinGroup_works_on_invalid_user() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
+        val httpEntity = HttpEntity(JoinGroupRequestDto("email", groupId = groupId), httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/user/group", HttpMethod.POST, httpEntity, NotFoundException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_joinGroup_works_on_invalid_groupId() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val invalidGroupId = ObjectId()
+        val httpEntity = HttpEntity(JoinGroupRequestDto(mockRegisterDto.email, groupId = invalidGroupId), httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/user/group", HttpMethod.POST, httpEntity, NotFoundException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_joinVote_works_no_authToken_header() {
+        // arrange
+        val httpEntity = HttpEntity(JoinVoteRequestDto("email", voteId = ObjectId()), HttpHeaders())
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/user/vote", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_joinVote_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
+        val httpEntity = HttpEntity(JoinVoteRequestDto(mockRegisterDto.email, voteId = voteId), httpHeaders)
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/user/vote", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+            }
+    }
+
+    @Test
+    fun is_joinVote_works_on_invalid_user() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
+        val httpEntity = HttpEntity(JoinVoteRequestDto("email", voteId = voteId), httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/user/vote", HttpMethod.POST, httpEntity, NotFoundException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_joinVote_works_on_invalid_groupId() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val invalidVoteId = ObjectId()
+        val httpEntity = HttpEntity(JoinVoteRequestDto(mockRegisterDto.email, voteId = invalidVoteId), httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/user/vote", HttpMethod.POST, httpEntity, NotFoundException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
             }
     }
 }

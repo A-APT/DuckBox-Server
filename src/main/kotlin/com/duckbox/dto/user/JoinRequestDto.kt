@@ -9,5 +9,5 @@ data class JoinGroupRequestDto (
 
 data class JoinVoteRequestDto (
     val email: String,
-    val groupId: ObjectId
+    val voteId: ObjectId
 )

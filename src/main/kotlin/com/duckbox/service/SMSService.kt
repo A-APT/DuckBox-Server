@@ -1,7 +1,7 @@
 package com.duckbox.service
 
-import com.duckbox.domain.user.SMSAuth
-import com.duckbox.domain.user.SMSAuthRepository
+import com.duckbox.domain.auth.SMSAuth
+import com.duckbox.domain.auth.SMSAuthRepository
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.errors.exception.UnknownException

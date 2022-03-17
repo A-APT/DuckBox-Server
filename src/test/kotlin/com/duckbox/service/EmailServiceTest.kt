@@ -1,6 +1,6 @@
 package com.duckbox.service
 
-import com.duckbox.domain.user.EmailAuthRepository
+import com.duckbox.domain.auth.EmailAuthRepository
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
 import org.assertj.core.api.Assertions.assertThat

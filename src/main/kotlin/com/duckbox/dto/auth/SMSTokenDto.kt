@@ -1,4 +1,4 @@
-package com.duckbox.dto.user
+package com.duckbox.dto.auth
 
 data class SMSTokenDto (
     var phoneNumber: String,

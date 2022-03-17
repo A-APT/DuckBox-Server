@@ -1,7 +1,6 @@
 package com.duckbox.controller
 
-import com.duckbox.dto.user.LoginResponseDto
-import com.duckbox.dto.user.SMSTokenDto
+import com.duckbox.dto.auth.SMSTokenDto
 import com.duckbox.service.SMSService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity

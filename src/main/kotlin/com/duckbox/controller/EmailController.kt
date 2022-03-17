@@ -1,6 +1,6 @@
 package com.duckbox.controller
 
-import com.duckbox.dto.user.EmailTokenDto
+import com.duckbox.dto.auth.EmailTokenDto
 import com.duckbox.service.EmailService
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping

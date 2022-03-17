@@ -1,7 +1,7 @@
 package com.duckbox.service
 
-import com.duckbox.domain.user.EmailAuth
-import com.duckbox.domain.user.EmailAuthRepository
+import com.duckbox.domain.auth.EmailAuth
+import com.duckbox.domain.auth.EmailAuthRepository
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.errors.exception.UnknownException
@@ -50,12 +50,14 @@ class EmailService (
 
         // create EmailAuth entity
         val expirationTime = createTime + EXPIRATION_TIME
-        emailAuthRepository.save(EmailAuth(
+        emailAuthRepository.save(
+            EmailAuth(
             email = targetEmail,
             token = token,
             expirationTime = expirationTime,
             expired = false
-        ))
+        )
+        )
 
         return token
     }

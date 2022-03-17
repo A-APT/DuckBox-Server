@@ -1,7 +1,7 @@
 package com.duckbox.controller
 
-import com.duckbox.domain.user.SMSAuthRepository
-import com.duckbox.dto.user.SMSTokenDto
+import com.duckbox.domain.auth.SMSAuthRepository
+import com.duckbox.dto.auth.SMSTokenDto
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.errors.exception.UnknownException

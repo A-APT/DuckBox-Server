@@ -1,7 +1,7 @@
 package com.duckbox.controller
 
-import com.duckbox.domain.user.EmailAuthRepository
-import com.duckbox.dto.user.EmailTokenDto
+import com.duckbox.domain.auth.EmailAuthRepository
+import com.duckbox.dto.auth.EmailTokenDto
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.errors.exception.UnknownException
@@ -11,7 +11,6 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.impl.annotations.RelaxedMockK
 import io.mockk.junit5.MockKExtension
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test

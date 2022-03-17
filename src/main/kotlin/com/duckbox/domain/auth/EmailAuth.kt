@@ -1,4 +1,4 @@
-package com.duckbox.domain.user
+package com.duckbox.domain.auth
 
 import java.util.*
 import javax.persistence.*

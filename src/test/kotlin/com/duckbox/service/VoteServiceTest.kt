@@ -12,7 +12,6 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.springframework.mock.web.MockMultipartFile
 import java.util.*
 
 @SpringBootTest
@@ -65,12 +64,7 @@ class VoteServiceTest {
     @Test
     fun is_registerVote_works_multipartFile() {
         // arrange
-        val uploadFileName: String = "test.txt"
-        val uploadFileContent: ByteArray = "test file!".toByteArray()
-        val multipartFile: MockMultipartFile = MockMultipartFile(
-            uploadFileName, uploadFileName, "text/plain", uploadFileContent
-        )
-        mockVoteRegisterDto.images = listOf(multipartFile)
+        mockVoteRegisterDto.images = listOf("test file!".toByteArray())
 
         // act
         val id = voteService.registerVote(mockVoteRegisterDto)

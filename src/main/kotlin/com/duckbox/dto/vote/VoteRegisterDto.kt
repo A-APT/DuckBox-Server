@@ -11,7 +11,7 @@ data class VoteRegisterDto (
     val groupId: ObjectId?, // required if isGroup is true
     val startTime: Date,
     val finishTime: Date,
-    var images: List<MultipartFile>, // image list
+    var images: List<ByteArray>, // image list
     val candidates: List<String>,
     val voters: List<Int>, // student id
     val reward: Boolean,

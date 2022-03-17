@@ -10,6 +10,13 @@ import org.springframework.web.multipart.MultipartFile
 @Service
 class PhotoService(private val photoRepository: PhotoRepository) {
 
+    fun savePhoto(bytes: ByteArray): ObjectId {
+        return photoRepository.save(
+            Photo(
+                image = Binary(bytes)
+            )).id
+    }
+
     fun savePhoto(file: MultipartFile): ObjectId {
         return photoRepository.save(
             Photo(

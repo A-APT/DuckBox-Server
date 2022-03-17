@@ -38,7 +38,21 @@ class PhotoServiceTest {
     }
 
     @Test
-    fun is_savePhoto_works_well() {
+    fun is_savePhoto_works_well_on_bytearray() {
+        // act
+        val byteArray = "test file!".toByteArray()
+        val id = photoService.savePhoto(byteArray)
+
+        // assert
+        photoRepository.findById(id).apply {
+            assertThat(isEmpty).isEqualTo(false)
+            assertThat(get().id).isEqualTo(id)
+            assertThat(get().image).isEqualTo(Binary(byteArray))
+        }
+    }
+
+    @Test
+    fun is_savePhoto_works_well_on_multipart_file() {
         // arrange
         val mockFile: MockMultipartFile = getTestMockMultipart()
 

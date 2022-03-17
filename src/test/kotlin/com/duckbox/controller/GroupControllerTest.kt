@@ -1,12 +1,13 @@
 package com.duckbox.controller
 
 import com.duckbox.domain.group.GroupRepository
+import com.duckbox.domain.photo.PhotoRepository
 import com.duckbox.domain.user.UserRepository
-import com.duckbox.dto.group.RegisterGroupDto
+import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.RegisterDto
-import com.duckbox.service.GroupService
 import com.duckbox.service.UserService
+import org.assertj.core.api.Assertions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
@@ -15,17 +16,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.web.server.LocalServerPort
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.Test
-import org.springframework.http.HttpStatus
-import org.springframework.http.MediaType
-import org.springframework.http.ResponseEntity.status
-import org.springframework.test.web.servlet.MockMvc
-import org.springframework.test.web.servlet.request.MockMvcRequestBuilders
-import org.springframework.test.web.servlet.result.MockMvcResultHandlers
-import org.springframework.test.web.servlet.setup.MockMvcBuilders
-import org.springframework.web.context.WebApplicationContext
+import org.springframework.http.*
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ExtendWith(SpringExtension::class)
@@ -38,7 +30,7 @@ class GroupControllerTest {
     private lateinit var groupRepository: GroupRepository
 
     @Autowired
-    private lateinit var groupService: GroupService
+    private lateinit var photoRepository: PhotoRepository
 
     @Autowired
     private lateinit var userRepository: UserRepository
@@ -51,12 +43,7 @@ class GroupControllerTest {
 
     private lateinit var baseAddress: String
 
-    @Autowired
-    private lateinit var webApplicationContext: WebApplicationContext
-
-    private lateinit var mockMvc : MockMvc
-
-    private val mockRegisterGroupDto = RegisterGroupDto(
+    private val mockRegisterGroupDto = GroupRegisterDto(
         name = "testingGroup",
         leader = "did",
         description = "testing !",
@@ -68,8 +55,8 @@ class GroupControllerTest {
     @AfterEach
     fun initTest() {
         baseAddress = "http://localhost:${port}"
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build()
         groupRepository.deleteAll()
+        photoRepository.deleteAll()
         userRepository.deleteAll()
     }
 
@@ -91,17 +78,28 @@ class GroupControllerTest {
     }
 
     @Test
-    fun is_registerGroup_works_no_authToken() {
+    fun is_registerGroup_works_no_headers_token() {
         // act, assert
-        mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/v1/group/register")
-                .param("name", mockRegisterGroupDto.name)
-                .param("leader", mockRegisterGroupDto.leader)
-                .param("description", mockRegisterGroupDto.description)
-        ).andExpect { status(HttpStatus.NO_CONTENT) }
-            .andDo(MockMvcResultHandlers.print())
-            .andDo{
-                assertThat(it.response.status).isEqualTo(HttpStatus.UNAUTHORIZED.value())
+        restTemplate
+            .postForEntity("${baseAddress}/api/v1/group/register", mockRegisterGroupDto, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_registerGroup_works_no_authToken() {
+        // arrange
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer INVALID_TOKEN"
+        }
+        val httpEntity = HttpEntity<GroupRegisterDto>(mockRegisterGroupDto, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
     }
 
@@ -109,18 +107,16 @@ class GroupControllerTest {
     fun is_registerGroup_works_well() {
         // arrange
         val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val httpEntity = HttpEntity<GroupRegisterDto>(mockRegisterGroupDto, httpHeaders)
 
         // act, assert
-        mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/v1/group/register")
-                .header("Authorization", "Bearer $token")
-                .param("name", mockRegisterGroupDto.name)
-                .param("leader", mockRegisterGroupDto.leader)
-                .param("description", mockRegisterGroupDto.description)
-        ).andExpect { status(HttpStatus.NO_CONTENT) }
-            .andDo(MockMvcResultHandlers.print())
-            .andDo{
-                assertThat(it.response.status).isEqualTo(HttpStatus.NO_CONTENT.value())
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
             }
     }
 
@@ -128,21 +124,18 @@ class GroupControllerTest {
     fun is_registerGroup_works_multipartFile() {
         // arrange
         val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        mockRegisterGroupDto.profile = "profile file!".toByteArray()
+        mockRegisterGroupDto.header = "header file!".toByteArray()
+        val httpEntity = HttpEntity<GroupRegisterDto>(mockRegisterGroupDto, httpHeaders)
 
         // act, assert
-        mockMvc.perform(
-            MockMvcRequestBuilders.multipart("/api/v1/group/register")
-                .file("profile", "profile: test file!".toByteArray())
-                .file("header", "header: test file!".toByteArray())
-                .param("name", mockRegisterGroupDto.name)
-                .param("leader", mockRegisterGroupDto.leader)
-                .param("description", mockRegisterGroupDto.description)
-                .header("Authorization", "Bearer $token")
-                .contentType(MediaType.APPLICATION_JSON_UTF8)
-        ).andExpect { status(HttpStatus.NO_CONTENT) }
-            .andDo(MockMvcResultHandlers.print())
-            .andDo{
-                assertThat(it.response.status).isEqualTo(HttpStatus.NO_CONTENT.value())
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
             }
     }
 

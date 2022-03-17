@@ -3,7 +3,7 @@ package com.duckbox.service
 import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
-import com.duckbox.dto.group.RegisterGroupDto
+import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.errors.exception.ConflictException
 import org.bson.types.ObjectId
 import org.springframework.stereotype.Service
@@ -14,7 +14,7 @@ class GroupService (
     private val photoService: PhotoService
 ){
 
-    fun registerGroup(registerDto: RegisterGroupDto) {
+    fun registerGroup(registerDto: GroupRegisterDto) {
         // check duplicate
         // Group name is unique, so...
         runCatching {

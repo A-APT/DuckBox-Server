@@ -119,11 +119,8 @@ class UserControllerTest {
         // act, assert
         restTemplate
             .postForEntity("${baseAddress}/api/v1/user/login", loginRequestDto, LoginResponseDto::class.java)
-            .body
             .apply {
-                assertThat(this).isNotEqualTo(null)
-                assertThat(token).isNotEqualTo(null)
-                assertThat(refreshToken).isNotEqualTo(null)
+                assertThat(statusCode).isEqualTo(HttpStatus.OK)
             }
     }
 
@@ -174,11 +171,8 @@ class UserControllerTest {
         // act, assert
         restTemplate
             .postForEntity("${baseAddress}/api/v1/user/refresh", loginResponseDto.body!!.refreshToken, JWTToken::class.java)
-            .body
             .apply {
-                assertThat(this).isNotEqualTo(null)
-                assertThat(token).isNotEqualTo(null)
-                assertThat(refreshToken).isNotEqualTo(null)
+                assertThat(statusCode).isEqualTo(HttpStatus.OK)
             }
     }
 
@@ -204,7 +198,7 @@ class UserControllerTest {
     @Test
     fun is_joinGroup_works_no_authToken_header() {
         // arrange
-        val httpEntity = HttpEntity(JoinGroupRequestDto("email", groupId = ObjectId()), HttpHeaders())
+        val httpEntity = HttpEntity(JoinGroupRequestDto("email", groupId = ObjectId().toString()), HttpHeaders())
 
         // act, assert
         restTemplate
@@ -222,7 +216,7 @@ class UserControllerTest {
             this["Authorization"] = "Bearer $token"
         }
         val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
-        val httpEntity = HttpEntity(JoinGroupRequestDto(mockRegisterDto.email, groupId = groupId), httpHeaders)
+        val httpEntity = HttpEntity(JoinGroupRequestDto(mockRegisterDto.email, groupId = groupId.toString()), httpHeaders)
 
         // act, assert
         restTemplate
@@ -240,7 +234,7 @@ class UserControllerTest {
             this["Authorization"] = "Bearer $token"
         }
         val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
-        val httpEntity = HttpEntity(JoinGroupRequestDto("email", groupId = groupId), httpHeaders)
+        val httpEntity = HttpEntity(JoinGroupRequestDto("email", groupId = groupId.toString()), httpHeaders)
 
         // act, assert
         restTemplate
@@ -257,8 +251,7 @@ class UserControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val invalidGroupId = ObjectId()
-        val httpEntity = HttpEntity(JoinGroupRequestDto(mockRegisterDto.email, groupId = invalidGroupId), httpHeaders)
+        val httpEntity = HttpEntity(JoinGroupRequestDto(mockRegisterDto.email, groupId = ObjectId().toString()), httpHeaders)
 
         // act, assert
         restTemplate
@@ -271,7 +264,7 @@ class UserControllerTest {
     @Test
     fun is_joinVote_works_no_authToken_header() {
         // arrange
-        val httpEntity = HttpEntity(JoinVoteRequestDto("email", voteId = ObjectId()), HttpHeaders())
+        val httpEntity = HttpEntity(JoinVoteRequestDto("email", voteId = ObjectId().toString()), HttpHeaders())
 
         // act, assert
         restTemplate
@@ -288,7 +281,7 @@ class UserControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
+        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto).toString()
         val httpEntity = HttpEntity(JoinVoteRequestDto(mockRegisterDto.email, voteId = voteId), httpHeaders)
         // act, assert
         restTemplate
@@ -306,7 +299,7 @@ class UserControllerTest {
             this["Authorization"] = "Bearer $token"
         }
         val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
-        val httpEntity = HttpEntity(JoinVoteRequestDto("email", voteId = voteId), httpHeaders)
+        val httpEntity = HttpEntity(JoinVoteRequestDto("email", voteId = voteId.toString()), httpHeaders)
 
         // act, assert
         restTemplate
@@ -324,7 +317,7 @@ class UserControllerTest {
             this["Authorization"] = "Bearer $token"
         }
         val invalidVoteId = ObjectId()
-        val httpEntity = HttpEntity(JoinVoteRequestDto(mockRegisterDto.email, voteId = invalidVoteId), httpHeaders)
+        val httpEntity = HttpEntity(JoinVoteRequestDto(mockRegisterDto.email, voteId = invalidVoteId.toString()), httpHeaders)
 
         // act, assert
         restTemplate

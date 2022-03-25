@@ -34,7 +34,7 @@ class VoteService (
                 title = voteRegisterDto.title,
                 content = voteRegisterDto.content,
                 isGroup = voteRegisterDto.isGroup,
-                groupId = voteRegisterDto.groupId,
+                groupId = if (voteRegisterDto.groupId == null) null else ObjectId(voteRegisterDto.groupId),
                 startTime = voteRegisterDto.startTime,
                 finishTime = voteRegisterDto.finishTime,
                 images = idOfImages.toList(),

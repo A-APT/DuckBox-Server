@@ -206,7 +206,7 @@ class UserServiceTest {
         val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
 
         // act
-        userService.joinGroup(mockRegisterDto.email, groupId)
+        userService.joinGroup(mockRegisterDto.email, groupId.toString())
 
         // assert
         userBoxRepository.findByEmail(mockRegisterDto.email).apply {
@@ -222,7 +222,7 @@ class UserServiceTest {
 
         // act & assert
         runCatching {
-            userService.joinGroup(mockRegisterDto.email, groupId)
+            userService.joinGroup(mockRegisterDto.email, groupId.toString())
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
@@ -235,7 +235,7 @@ class UserServiceTest {
     fun is_joinGroup_works_on_invalid_groupId() {
         // arrange
         userService.register(mockRegisterDto)
-        val invalidGroupId = ObjectId()
+        val invalidGroupId: String = ObjectId().toString()
 
         // act & assert
         runCatching {
@@ -255,7 +255,7 @@ class UserServiceTest {
         val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
 
         // act
-        userService.joinVote(mockRegisterDto.email, voteId)
+        userService.joinVote(mockRegisterDto.email, voteId.toString())
 
         // assert
         userBoxRepository.findByEmail(mockRegisterDto.email).apply {
@@ -271,7 +271,7 @@ class UserServiceTest {
 
         // act & assert
         runCatching {
-            userService.joinVote(mockRegisterDto.email, voteId)
+            userService.joinVote(mockRegisterDto.email, voteId.toString())
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
@@ -284,7 +284,7 @@ class UserServiceTest {
     fun is_joinVote_works_on_invalid_groupId() {
         // arrange
         userService.register(mockRegisterDto)
-        val invalidVoteId = ObjectId()
+        val invalidVoteId: String = ObjectId().toString()
 
         // act & assert
         runCatching {

@@ -1,13 +1,11 @@
 package com.duckbox.dto.user
 
-import org.bson.types.ObjectId
-
 data class JoinGroupRequestDto (
     val email: String,
-    val groupId: ObjectId
+    val groupId: String // ObjectId
 )
 
 data class JoinVoteRequestDto (
     val email: String,
-    val voteId: ObjectId
+    val voteId: String // ObjectId
 )

@@ -109,7 +109,9 @@ class UserService (
             )
     }
 
-    fun joinGroup(userEmail: String, groupId: ObjectId) {
+    fun joinGroup(userEmail: String, groupId: String) {
+        val groupObjectId = ObjectId(groupId)
+
         // Find user
         lateinit var userBox: UserBox
         runCatching {
@@ -121,14 +123,16 @@ class UserService (
         }
 
         // Check voteId is valid
-        if (groupRepository.findById(groupId).isEmpty)
+        if (groupRepository.findById(groupObjectId).isEmpty)
             throw NotFoundException("Invalid GroupId: [${groupId}]")
 
-        userBox.groups.add(groupId)
+        userBox.groups.add(groupObjectId)
         userBoxRepository.save(userBox)
     }
 
-    fun joinVote(userEmail: String, voteId: ObjectId) {
+    fun joinVote(userEmail: String, voteId: String) {
+        val voteObjectId = ObjectId(voteId)
+
         // Find user
         lateinit var userBox: UserBox
         runCatching {
@@ -140,10 +144,10 @@ class UserService (
         }
 
         // Check voteId is valid
-        if (voteRepository.findById(voteId).isEmpty)
+        if (voteRepository.findById(voteObjectId).isEmpty)
             throw NotFoundException("Invalid VoteId: [${voteId}]")
 
-        userBox.votes.add(voteId)
+        userBox.votes.add(voteObjectId)
         userBoxRepository.save(userBox)
     }
 

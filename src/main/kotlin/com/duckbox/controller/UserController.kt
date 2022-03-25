@@ -3,6 +3,7 @@ package com.duckbox.controller
 import com.duckbox.dto.JWTToken
 import com.duckbox.dto.user.*
 import com.duckbox.service.UserService
+import org.bson.types.ObjectId
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody

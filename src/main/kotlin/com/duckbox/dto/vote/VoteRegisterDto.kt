@@ -1,14 +1,12 @@
 package com.duckbox.dto.vote
 
-import org.bson.types.ObjectId
-import org.springframework.web.multipart.MultipartFile
 import java.util.*
 
 data class VoteRegisterDto (
     val title: String,
     val content: String,
     val isGroup: Boolean,
-    val groupId: ObjectId?, // required if isGroup is true
+    val groupId: String?, // ObjectId // required if isGroup is true
     val startTime: Date,
     val finishTime: Date,
     var images: List<ByteArray>, // image list

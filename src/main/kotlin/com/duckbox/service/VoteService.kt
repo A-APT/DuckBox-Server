@@ -3,7 +3,6 @@ package com.duckbox.service
 import com.duckbox.domain.vote.VoteEntity
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.vote.VoteRegisterDto
-import com.duckbox.errors.exception.ConflictException
 import org.bson.types.ObjectId
 import org.springframework.stereotype.Service
 
@@ -14,13 +13,6 @@ class VoteService (
 ) {
 
     fun registerVote(voteRegisterDto: VoteRegisterDto): ObjectId {
-        // check duplicate
-        // is Vote Title unique?
-        runCatching {
-            voteRepository.findByTitle(voteRegisterDto.title)
-        }.onSuccess {
-            throw ConflictException("Group [${voteRegisterDto.title}] is already registered.")
-        }
 
         // upload images if exists
         val idOfImages: MutableList<ObjectId> = mutableListOf()

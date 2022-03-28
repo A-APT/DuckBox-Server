@@ -3,11 +3,14 @@ package com.duckbox.service
 import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
+import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.NotFoundException
 import org.bson.types.ObjectId
+import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 
 @Service
@@ -15,6 +18,18 @@ class GroupService (
     private val groupRepository: GroupRepository,
     private val photoService: PhotoService
 ){
+
+    fun getGroups(): ResponseEntity<List<GroupDetailDto>> {
+        val groupDtoList: MutableList<GroupDetailDto> = mutableListOf()
+        groupRepository.findAll().forEach {
+            groupDtoList.add(it.toGroupDetailDto())
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                groupDtoList
+            )
+    }
 
     fun registerGroup(registerDto: GroupRegisterDto): ObjectId {
         // check duplicate

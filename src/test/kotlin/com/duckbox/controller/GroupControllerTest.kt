@@ -4,10 +4,12 @@ import com.duckbox.MockDto
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.photo.PhotoRepository
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.RegisterDto
+import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.service.GroupService
 import com.duckbox.service.UserService
@@ -77,6 +79,35 @@ class GroupControllerTest {
         return userService.login(
             LoginRequestDto(email = "email@konkuk.ac.kr", password = "test")
         ).body!!.token
+    }
+
+    @Test
+    fun is_getGroups_works_no_headers_token() {
+        // act, assert
+        restTemplate
+            .getForEntity("${baseAddress}/api/v1/group", Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_getGroups_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        groupService.registerGroup(mockGroupRegisterDto)
+        val httpEntity = HttpEntity(null, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
+                Assertions.assertThat(body!!.size).isEqualTo(1)
+            }
     }
 
     @Test

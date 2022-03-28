@@ -5,6 +5,7 @@ import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
 import com.duckbox.domain.photo.PhotoRepository
+import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.errors.exception.ConflictException
@@ -39,6 +40,18 @@ class GroupServiceTest {
     fun init() {
         groupRepository.deleteAll()
         photoRepository.deleteAll()
+    }
+
+    @Test
+    fun is_getGroups_works_well() {
+        // arrange
+        groupService.registerGroup(mockGroupRegisterDto)
+
+        // act
+        val groupList: List<GroupDetailDto> = groupService.getGroups().body!!
+
+        // assert
+        assertThat(groupList.size).isEqualTo(1)
     }
 
     @Test

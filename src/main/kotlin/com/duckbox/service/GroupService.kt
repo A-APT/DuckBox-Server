@@ -4,7 +4,9 @@ import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
 import com.duckbox.dto.group.GroupRegisterDto
+import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.errors.exception.ConflictException
+import com.duckbox.errors.exception.NotFoundException
 import org.bson.types.ObjectId
 import org.springframework.stereotype.Service
 
@@ -42,5 +44,31 @@ class GroupService (
                 header = headerImageId
             )
         ).id
+    }
+
+    fun updateGroup(groupUpdateDto: GroupUpdateDto): GroupEntity {
+        lateinit var groupEntity: GroupEntity
+        runCatching {
+            groupRepository.findById(ObjectId(groupUpdateDto.id)).get()
+        }.onSuccess {
+            groupEntity = it
+        }.onFailure {
+            throw NotFoundException("Group [${groupUpdateDto.id}] was not registered.")
+        }
+
+        groupUpdateDto.apply {
+            if (description != null) groupEntity.description = description!!
+            if (profile != null) { // profile image has changed
+                if(groupEntity.profile != null) photoService.deletePhoto(groupEntity.profile!!) // delete original
+                groupEntity.profile = photoService.savePhoto(profile!!) // save changed
+            }
+            if (header != null) { // header image has changed
+                if(groupEntity.header != null) photoService.deletePhoto(groupEntity.header!!) // delete original
+                groupEntity.header = photoService.savePhoto(header!!) // save changed
+            }
+        }
+
+        // update to server
+        return groupRepository.save(groupEntity)
     }
 }

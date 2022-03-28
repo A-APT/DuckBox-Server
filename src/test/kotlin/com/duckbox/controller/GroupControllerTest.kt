@@ -5,10 +5,14 @@ import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.photo.PhotoRepository
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.dto.group.GroupRegisterDto
+import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.RegisterDto
+import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.service.GroupService
 import com.duckbox.service.UserService
 import org.assertj.core.api.Assertions
+import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.extension.ExtendWith
@@ -35,6 +39,9 @@ class GroupControllerTest {
 
     @Autowired
     private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var groupService: GroupService
 
     @Autowired
     private lateinit var userService: UserService
@@ -76,7 +83,7 @@ class GroupControllerTest {
     fun is_registerGroup_works_no_headers_token() {
         // act, assert
         restTemplate
-            .postForEntity("${baseAddress}/api/v1/group/register", mockGroupRegisterDto, Unit::class.java)
+            .postForEntity("${baseAddress}/api/v1/group", mockGroupRegisterDto, Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
@@ -92,7 +99,7 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.POST, httpEntity, Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
@@ -109,7 +116,7 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.POST, httpEntity, Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
             }
@@ -129,10 +136,77 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.POST, httpEntity, Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
             }
     }
 
+    @Test
+    fun is_updateGroup_works_no_authToken() {
+        // arrange
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer INVALID_TOKEN"
+        }
+
+        val mockGroupUpdateDto = GroupUpdateDto(
+            id = ObjectId().toString(),
+            description = "changed description",
+            profile = "changed profile file!".toByteArray(),
+        )
+        val httpEntity = HttpEntity<GroupUpdateDto>(mockGroupUpdateDto, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/detail", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_updateGroup_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val groupId: ObjectId = groupService.registerGroup(mockGroupRegisterDto)
+
+        val mockGroupUpdateDto = GroupUpdateDto(
+            id = groupId.toString(),
+            description = "changed description",
+            profile = "changed profile file!".toByteArray(),
+        )
+        val httpEntity = HttpEntity<GroupUpdateDto>(mockGroupUpdateDto, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/detail", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+            }
+    }
+
+    @Test
+    fun is_updateGroup_works_when_unregistered_group() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+
+        val mockGroupUpdateDto = GroupUpdateDto(
+            id = ObjectId().toString(),
+            description = "changed description",
+        )
+        val httpEntity = HttpEntity<GroupUpdateDto>(mockGroupUpdateDto, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/detail", HttpMethod.POST, httpEntity, NotFoundException::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
 }

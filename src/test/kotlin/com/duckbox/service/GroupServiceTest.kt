@@ -1,11 +1,14 @@
 package com.duckbox.service
 
 import com.duckbox.MockDto
+import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
 import com.duckbox.domain.photo.PhotoRepository
 import com.duckbox.dto.group.GroupRegisterDto
+import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.errors.exception.ConflictException
+import com.duckbox.errors.exception.NotFoundException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
+import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 
@@ -89,6 +93,99 @@ class GroupServiceTest {
         }.onFailure {
             assertThat(it is ConflictException)
             assertThat(it.message).isEqualTo("Group [${mockGroupRegisterDto.name}] is already registered.")
+        }
+    }
+
+    @Test
+    fun is_updateGroup_works_well() {
+        // arrange
+        val groupId: ObjectId = groupService.registerGroup(mockGroupRegisterDto)
+        val mockGroupUpdateDto = GroupUpdateDto(
+            id = groupId.toString(),
+            description = "changed description",
+            profile = "changed profile file!".toByteArray(),
+            header = "changed header file!".toByteArray()
+        )
+
+        // act
+        val updated: GroupEntity = groupService.updateGroup(mockGroupUpdateDto)
+
+        // assert
+        groupRepository.findById(groupId).get().apply {
+            assertThat(name).isEqualTo(mockGroupRegisterDto.name)
+            assertThat(description).isEqualTo(mockGroupUpdateDto.description)
+            assertThat(profile).isEqualTo(updated.profile)
+            assertThat(header).isEqualTo(updated.header)
+        }
+        assertThat(photoRepository.findAll().size).isEqualTo(2)
+    }
+
+    @Test
+    fun is_updateGroup_works_partial_update() {
+        // arrange
+        val groupId: ObjectId = groupService.registerGroup(mockGroupRegisterDto)
+        val mockGroupUpdateDto = GroupUpdateDto(
+            id = groupId.toString(),
+            description = "changed description",
+            profile = "changed profile file!".toByteArray(),
+        )
+
+        // act
+        val updated: GroupEntity = groupService.updateGroup(mockGroupUpdateDto)
+
+        // assert
+        groupRepository.findById(groupId).get().apply {
+            assertThat(name).isEqualTo(mockGroupRegisterDto.name)
+            assertThat(description).isEqualTo(mockGroupUpdateDto.description)
+            assertThat(profile).isEqualTo(updated.profile)
+            assertThat(header).isEqualTo(updated.header)
+        }
+    }
+
+    @Test
+    fun is_updateGroup_works_with_photo() {
+        // arrange
+        val groupId: ObjectId = groupService.registerGroup(mockGroupRegisterDto)
+        val mockGroupUpdateDto1 = GroupUpdateDto(
+            id = groupId.toString(),
+            description = "changed description",
+            profile = "changed profile file!".toByteArray(),
+        )
+        val mockGroupUpdateDto2 = GroupUpdateDto(
+            id = groupId.toString(),
+            description = null,
+            profile = "double-changed profile file!".toByteArray(),
+        )
+
+        // act
+        groupService.updateGroup(mockGroupUpdateDto1)
+        val updated: GroupEntity = groupService.updateGroup(mockGroupUpdateDto2)
+
+        // assert
+        groupRepository.findById(groupId).get().apply {
+            assertThat(name).isEqualTo(mockGroupRegisterDto.name)
+            assertThat(description).isEqualTo(mockGroupUpdateDto1.description)
+            assertThat(profile).isEqualTo(updated.profile)
+        }
+        assertThat(photoRepository.findAll().size).isEqualTo(1)
+    }
+
+    @Test
+    fun is_updateGroup_works_unregistered_group() {
+        // arrange
+        val mockGroupUpdateDto = GroupUpdateDto(
+            id = ObjectId().toString(),
+            description = "changed description"
+        )
+
+        // act & assert
+        runCatching {
+            groupService.updateGroup(mockGroupUpdateDto)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException)
+            assertThat(it.message).isEqualTo("Group [${mockGroupUpdateDto.id}] was not registered.")
         }
     }
 

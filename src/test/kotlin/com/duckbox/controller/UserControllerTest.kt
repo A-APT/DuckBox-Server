@@ -215,7 +215,8 @@ class UserControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
+        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
         val httpEntity = HttpEntity(JoinGroupRequestDto(mockRegisterDto.email, groupId = groupId.toString()), httpHeaders)
 
         // act, assert
@@ -233,7 +234,8 @@ class UserControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
+        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
         val httpEntity = HttpEntity(JoinGroupRequestDto("email", groupId = groupId.toString()), httpHeaders)
 
         // act, assert

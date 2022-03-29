@@ -54,6 +54,7 @@ class GroupControllerTest {
     private lateinit var baseAddress: String
 
     private val mockGroupRegisterDto: GroupRegisterDto = MockDto.mockGroupRegisterDto
+    private val mockUserEmail = "email@konkuk.ac.kr"
 
     @BeforeEach
     @AfterEach
@@ -70,14 +71,14 @@ class GroupControllerTest {
             studentId = 2019333,
             name = "je",
             password = "test",
-            email = "email@konkuk.ac.kr",
+            email = mockUserEmail,
             phoneNumber = "01012341234",
             nickname = "duck",
             college = "ku",
             department = listOf("computer", "software")
         ))
         return userService.login(
-            LoginRequestDto(email = "email@konkuk.ac.kr", password = "test")
+            LoginRequestDto(email = mockUserEmail, password = "test")
         ).body!!.token
     }
 
@@ -98,7 +99,8 @@ class GroupControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        groupService.registerGroup(mockGroupRegisterDto)
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        groupService.registerGroup(mockUserEmail, mockDto)
         val httpEntity = HttpEntity(null, httpHeaders)
 
         // act, assert
@@ -143,7 +145,9 @@ class GroupControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val httpEntity = HttpEntity<GroupRegisterDto>(mockGroupRegisterDto, httpHeaders)
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+
+        val httpEntity = HttpEntity<GroupRegisterDto>(mockDto, httpHeaders)
 
         // act, assert
         restTemplate
@@ -160,7 +164,7 @@ class GroupControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
         mockDto.profile = "profile file!".toByteArray()
         mockDto.header = "header file!".toByteArray()
         val httpEntity = HttpEntity<GroupRegisterDto>(mockDto, httpHeaders)
@@ -196,13 +200,33 @@ class GroupControllerTest {
     }
 
     @Test
+    fun is_registerGroup_works_invalid_did() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = "invalid did")
+
+        val httpEntity = HttpEntity<GroupRegisterDto>(mockDto, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
     fun is_updateGroup_works_well() {
         // arrange
         val token: String = registerAndLogin()
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val groupId: ObjectId = groupService.registerGroup(mockGroupRegisterDto)
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: ObjectId = groupService.registerGroup(mockUserEmail, mockDto)
 
         val mockGroupUpdateDto = GroupUpdateDto(
             id = groupId.toString(),

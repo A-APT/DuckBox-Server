@@ -12,6 +12,7 @@ import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.ConflictException
+import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.security.JWTTokenProvider
 import com.duckbox.service.ethereum.DIdService
@@ -36,6 +37,18 @@ class UserService (
         // generate did using SHA-256: current time + email + phone-number
         val didInfo = "${System.currentTimeMillis()}${targetEmail}"
         return hashUtils.SHA256(didInfo)
+    }
+
+    fun checkValidUser(userEmail: String, did: String) { // check userEmail and did is correct
+        runCatching {
+            userRepository.findByEmail(userEmail)
+        }.onSuccess {
+            if (it.did != did) {
+                throw ForbiddenException("User [$userEmail] and DID were not matched.")
+            }
+        }.onFailure {
+            throw NotFoundException("User [${userEmail}] was not registered.")
+        }
     }
 
     fun register(registerDto: RegisterDto) {

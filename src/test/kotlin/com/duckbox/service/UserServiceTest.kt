@@ -8,10 +8,12 @@ import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.JWTToken
+import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.ConflictException
+import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.security.JWTTokenProvider
@@ -203,7 +205,8 @@ class UserServiceTest {
     fun is_joinGroup_works_well() {
         // arrange
         userService.register(mockRegisterDto)
-        val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
+        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
 
         // act
         userService.joinGroup(mockRegisterDto.email, groupId.toString())
@@ -218,16 +221,19 @@ class UserServiceTest {
     @Test
     fun is_joinGroup_works_on_invalid_user() {
         // arrange
-        val groupId = groupService.registerGroup(MockDto.mockGroupRegisterDto)
+        userService.register(mockRegisterDto)
+        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
 
         // act & assert
+        val invalidEmail = "test@com"
         runCatching {
-            userService.joinGroup(mockRegisterDto.email, groupId.toString())
+            userService.joinGroup(invalidEmail, groupId.toString())
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
             assertThat(it is NotFoundException).isEqualTo(true)
-            assertThat(it.message).isEqualTo("User [${mockRegisterDto.email}] was not registered.")
+            assertThat(it.message).isEqualTo("User [${invalidEmail}] was not registered.")
         }
     }
 
@@ -294,6 +300,58 @@ class UserServiceTest {
         }.onFailure {
             assertThat(it is NotFoundException).isEqualTo(true)
             assertThat(it.message).isEqualTo("Invalid VoteId: [${invalidVoteId}]")
+        }
+    }
+
+    @Test
+    fun is_checkValidUser_works_well() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val targetDid: String = userRepository.findByEmail(mockRegisterDto.email).did
+
+        // act & assert
+        runCatching {
+            userService.checkValidUser(mockRegisterDto.email, targetDid)
+        }.onFailure {
+            fail("This should be failed.")
+        }
+    }
+
+    @Test
+    fun is_checkValidUser_works_when_incorrect_userEmail_and_did() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val targetDid: String = userRepository.findByEmail(mockRegisterDto.email).did
+
+        val invalidEmail = "test@com"
+        userService.register(mockRegisterDto.copy(email = invalidEmail))
+
+        // act & assert
+        runCatching {
+            userService.checkValidUser(invalidEmail, targetDid)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is ForbiddenException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [$invalidEmail] and DID were not matched.")
+        }
+    }
+
+    @Test
+    fun is_checkValidUser_works_on_unregistered_user() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val targetDid: String = userRepository.findByEmail(mockRegisterDto.email).did
+        val invalidEmail = "test@com"
+
+        // act & assert
+        runCatching {
+            userService.checkValidUser(invalidEmail, targetDid)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [${invalidEmail}] was not registered.")
         }
     }
 }

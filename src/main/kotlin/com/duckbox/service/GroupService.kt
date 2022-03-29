@@ -16,7 +16,8 @@ import org.springframework.stereotype.Service
 @Service
 class GroupService (
     private val groupRepository: GroupRepository,
-    private val photoService: PhotoService
+    private val photoService: PhotoService,
+    private val userService: UserService,
 ){
 
     fun getGroups(): ResponseEntity<List<GroupDetailDto>> {
@@ -31,7 +32,10 @@ class GroupService (
             )
     }
 
-    fun registerGroup(registerDto: GroupRegisterDto): ObjectId {
+    fun registerGroup(userEmail: String, registerDto: GroupRegisterDto): ObjectId {
+        // check did is correct
+        userService.checkValidUser(userEmail, registerDto.leader)
+
         // check duplicate
         // Group name is unique, so...
         runCatching {
@@ -60,15 +64,19 @@ class GroupService (
         ).id
     }
 
-    fun updateGroup(groupUpdateDto: GroupUpdateDto): GroupEntity {
+    fun updateGroup(userEmail: String, groupUpdateDto: GroupUpdateDto): GroupEntity {
+        // check group is valid
         lateinit var groupEntity: GroupEntity
         runCatching {
             groupRepository.findById(ObjectId(groupUpdateDto.id)).get()
         }.onSuccess {
             groupEntity = it
         }.onFailure {
-            throw NotFoundException("Group [${groupUpdateDto.id}] was not registered.")
+            throw NotFoundException("Invalid GroupId: [${groupUpdateDto.id}]")
         }
+
+        // check did is correct
+        userService.checkValidUser(userEmail, groupEntity.leader)
 
         groupUpdateDto.apply {
             if (description != null) groupEntity.description = description!!

@@ -19,7 +19,7 @@ class JWTTokenProvider(private val userDetailsService: CustomUserDetailsService)
     @Value("\${jwt.signing.key}")
     private lateinit var SIGNING_KEY: String
 
-    val HEADER_STRING: String = "Authorization"
+    val HEADER_STRING: String = "authorization" // for HttpHeaders (Authorization)
     val TOKEN_PREFIX: String = "Bearer"
 
     private val tokenPeriod: Long = 1000L * 60L * 10L // 10 minute

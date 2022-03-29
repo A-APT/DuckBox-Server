@@ -67,7 +67,6 @@ class GroupServiceTest {
             assertThat(profile).isEqualTo(mockGroupRegisterDto.profile)
             assertThat(header).isEqualTo(mockGroupRegisterDto.header)
             assertThat(status).isEqualTo(GroupStatus.PENDING)
-            assertThat(menbers).isEqualTo(0)
         }
     }
 
@@ -87,7 +86,6 @@ class GroupServiceTest {
             assertThat(leader).isEqualTo(mockDto.leader)
             assertThat(description).isEqualTo(mockDto.description)
             assertThat(status).isEqualTo(GroupStatus.PENDING)
-            assertThat(menbers).isEqualTo(0)
             assertThat(photoRepository.findById(profile).isPresent).isEqualTo(true)
             assertThat(photoRepository.findById(header).isPresent).isEqualTo(true)
         }

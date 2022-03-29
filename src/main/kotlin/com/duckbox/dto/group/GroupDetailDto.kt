@@ -8,7 +8,6 @@ data class GroupDetailDto (
     var leader: String, // did
     var status: GroupStatus,
     var description: String,
-    var menbers: Int,
     var profile: ByteArray? = null, // image
     var header: ByteArray? = null, // image
 )

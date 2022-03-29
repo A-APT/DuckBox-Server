@@ -54,7 +54,6 @@ class GroupService (
                 leader = registerDto.leader,
                 status = GroupStatus.PENDING,
                 description = registerDto.description,
-                menbers = 0,
                 profile = profileImageId,
                 header = headerImageId
             )

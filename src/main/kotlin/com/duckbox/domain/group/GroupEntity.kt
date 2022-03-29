@@ -13,21 +13,20 @@ class GroupEntity (
     var leader: String, // did
     var status: GroupStatus,
     var description: String,
-    var menbers: Int,
     var profile: ObjectId? = null, // image
     var header: ObjectId? = null, // image
 ) {
     fun toGroupDetailDto(): GroupDetailDto {
         return GroupDetailDto(
             id = id.toString(), // change ObjectId to String
-            name, leader, status, description, menbers
+            name, leader, status, description
         )
     }
 }
 
 enum class GroupStatus {
-    ALIVE, // [활성화]
-    DELETED, // [삭제된]
     PENDING, // [인증전]
+    VALID, // [활성화]
+    DELETED, // [삭제된]
     REPORTED, // [신고된]
 }

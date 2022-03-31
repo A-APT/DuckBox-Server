@@ -1,5 +1,7 @@
 package com.duckbox.domain.vote
 
+import com.duckbox.dto.vote.VoteDetailDto
+import org.bson.types.Binary
 import org.bson.types.ObjectId
 import org.springframework.data.mongodb.core.mapping.Document
 import java.util.*
@@ -16,8 +18,23 @@ class VoteEntity (
     var groupId: ObjectId?, // required if isGroup is true
     var startTime: Date,
     var finishTime: Date,
+    var status: BallotStatus,
     var images: List<ObjectId>, // image list
     var candidates: List<String>,
     var voters: List<Int>, // student id
     var reward: Boolean
-)
+) {
+
+    fun toVoteDetailDto(_images: List<ByteArray>): VoteDetailDto {
+        return VoteDetailDto(
+            id = id.toString(), // change ObjectId to String
+            title, content, isGroup, groupId, startTime, finishTime, status, _images, candidates, reward
+        )
+    }
+}
+
+enum class BallotStatus {
+    OPEN,
+    ONGOING,
+    FINISHED,
+}

@@ -1,8 +1,13 @@
 package com.duckbox.service
 
 import com.duckbox.MockDto
+import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.photo.PhotoRepository
+import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.VoteRepository
+import com.duckbox.dto.group.GroupRegisterDto
+import com.duckbox.dto.user.RegisterDto
+import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
@@ -11,6 +16,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
+import org.bson.types.Binary
+import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 
@@ -26,13 +33,45 @@ class VoteServiceTest {
     @Autowired
     private lateinit var voteService: VoteService
 
+    @Autowired
+    private lateinit var groupRepository: GroupRepository
+
+    @Autowired
+    private lateinit var userRepository: UserRepository
+
+    @Autowired
+    private lateinit var groupService: GroupService
+
+    @Autowired
+    private lateinit var userService: UserService
+
     private val mockVoteRegisterDto: VoteRegisterDto = MockDto.mockVoteRegisterDto
+    private val mockUserEmail = "email@konkuk.ac.kr"
 
     @BeforeEach
     @AfterEach
     fun init() {
         voteRepository.deleteAll()
         photoRepository.deleteAll()
+        userRepository.deleteAll()
+        groupRepository.deleteAll()
+    }
+
+    fun registerMockUserAndGroup(): String {
+        userService.register(
+            RegisterDto(
+                studentId = 2019333,
+                name = "je",
+                password = "test",
+                email = mockUserEmail,
+                phoneNumber = "01012341234",
+                nickname = "duck",
+                college = "ku",
+                department = listOf("computer", "software")
+            )
+        )
+        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        return groupService.registerGroup(mockUserEmail, mockDto).toString()
     }
 
     @Test
@@ -68,4 +107,30 @@ class VoteServiceTest {
         }
     }
 
+    @Test
+    fun is_findVotesOfGroup_works_ok() {
+        // arrange
+        val groupId: String = registerMockUserAndGroup()
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, groupId = groupId)
+        val binaryFile: ByteArray = "test file!".toByteArray()
+        mockDto.images = listOf(binaryFile)
+        val voteId: ObjectId = voteService.registerVote(mockDto)
+
+        // act
+        val voteList: List<VoteDetailDto> = voteService.findVotesOfGroup(groupId).body!!
+
+        // assert
+        assertThat(voteList.size).isEqualTo(1)
+        assertThat(voteList[0].id).isEqualTo(voteId.toString())
+        assertThat(voteList[0].images[0]).isEqualTo(binaryFile)
+    }
+
+    @Test
+    fun is_findVotesOfGroup_works_well_when_unregistered_group() {
+        // act
+        val voteList: List<VoteDetailDto> = voteService.findVotesOfGroup(ObjectId().toString()).body!!
+
+        // assert
+        assertThat(voteList.size).isEqualTo(0)
+    }
 }

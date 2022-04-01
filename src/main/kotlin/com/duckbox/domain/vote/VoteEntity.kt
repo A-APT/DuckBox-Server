@@ -15,7 +15,7 @@ class VoteEntity (
     var title: String,
     var content: String,
     var isGroup: Boolean,
-    var groupId: ObjectId?, // required if isGroup is true
+    var owner: String, // groupId(ObjectId) if group vote else userId(Long)
     var startTime: Date,
     var finishTime: Date,
     var status: BallotStatus,
@@ -28,7 +28,7 @@ class VoteEntity (
     fun toVoteDetailDto(_images: List<ByteArray>): VoteDetailDto {
         return VoteDetailDto(
             id = id.toString(), // change ObjectId to String
-            title, content, isGroup, groupId, startTime, finishTime, status, _images, candidates, reward
+            title, content, isGroup, owner, startTime, finishTime, status, _images, candidates, reward
         )
     }
 }

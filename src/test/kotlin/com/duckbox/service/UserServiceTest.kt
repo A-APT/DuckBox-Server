@@ -259,7 +259,7 @@ class UserServiceTest {
     fun is_joinVote_works_well() {
         // arrange
         userService.register(mockRegisterDto)
-        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
+        val voteId = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto)
 
         // act
         userService.joinVote(mockRegisterDto.email, voteId.toString())
@@ -274,16 +274,18 @@ class UserServiceTest {
     @Test
     fun is_joinVote_works_on_invalid_user() {
         // arrange
-        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
+        userService.register(mockRegisterDto)
+        val voteId = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto)
+        val invalidEmail = "invalid email"
 
         // act & assert
         runCatching {
-            userService.joinVote(mockRegisterDto.email, voteId.toString())
+            userService.joinVote(invalidEmail, voteId.toString())
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
             assertThat(it is NotFoundException).isEqualTo(true)
-            assertThat(it.message).isEqualTo("User [${mockRegisterDto.email}] was not registered.")
+            assertThat(it.message).isEqualTo("User [$invalidEmail] was not registered.")
         }
     }
 

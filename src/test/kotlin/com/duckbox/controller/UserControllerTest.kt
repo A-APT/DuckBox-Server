@@ -284,7 +284,7 @@ class UserControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto).toString()
+        val voteId = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto).toString()
         val httpEntity = HttpEntity(voteId, httpHeaders)
         // act, assert
         restTemplate
@@ -301,7 +301,7 @@ class UserControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer invalid_token"
         }
-        val voteId = voteService.registerVote(MockDto.mockVoteRegisterDto)
+        val voteId = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto)
         val httpEntity = HttpEntity(voteId.toString(), httpHeaders)
 
         // act, assert

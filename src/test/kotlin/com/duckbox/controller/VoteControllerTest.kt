@@ -164,8 +164,8 @@ class VoteControllerTest {
         val httpHeaders = HttpHeaders()
         httpHeaders["Authorization"] = "Bearer $token"
         val groupId: String = registerMockGroup() // register group
-        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, groupId = groupId)
-        voteService.registerVote(mockDto) // register vote
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, owner = groupId)
+        voteService.registerVote(mockUserEmail, mockDto) // register vote
 
         val httpEntity = HttpEntity<String>(groupId, httpHeaders)
 

@@ -2,6 +2,8 @@ package com.duckbox.helper
 
 import com.duckbox.MockDto
 import com.duckbox.domain.photo.PhotoRepository
+import com.duckbox.domain.user.User
+import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.BallotStatus
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.vote.VoteRegisterDto
@@ -31,9 +33,13 @@ class VoteSchedulerTest {
     private lateinit var photoRepository: PhotoRepository
 
     @Autowired
+    private lateinit var userRepository: UserRepository
+
+    @Autowired
     private lateinit var voteService: VoteService
 
     private val mockVoteRegisterDto: VoteRegisterDto = MockDto.mockVoteRegisterDto
+    private val mockUserEmail = "email@konkuk.ac.kr"
 
     @BeforeEach
     @AfterEach
@@ -42,13 +48,23 @@ class VoteSchedulerTest {
         photoRepository.deleteAll()
     }
 
+    fun registerMockUser() {
+        userRepository.save(User(
+            did = "", studentId = 1, name = "", password = "", email = mockUserEmail,
+            phoneNumber = "", nickname = "", college = "", department = listOf(),
+            roles = setOf("ROLE_USER")
+        ))
+    }
+
     @Test
     fun is_voteStatusTask_works_well() {
+        // arrange
+        registerMockUser()
         val now: Date = Date()
         val startTime = Date(now.time - 1000)
         val finishTime = now
         val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(startTime = startTime, finishTime = finishTime)
-        val id = voteService.registerVote(mockDto)
+        val id = voteService.registerVote(mockUserEmail, mockDto)
 
         // act
         voteScheduler.voteStatusTask()

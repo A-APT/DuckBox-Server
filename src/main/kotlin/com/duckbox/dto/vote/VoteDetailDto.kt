@@ -1,7 +1,6 @@
 package com.duckbox.dto.vote
 
 import com.duckbox.domain.vote.BallotStatus
-import org.bson.types.ObjectId
 import java.util.*
 
 data class VoteDetailDto (
@@ -9,7 +8,7 @@ data class VoteDetailDto (
     var title: String,
     var content: String,
     var isGroup: Boolean,
-    var groupId: ObjectId?, // required if isGroup is true
+    var owner: String, // groupId(ObjectId) if group vote else userId(Long)
     var startTime: Date,
     var finishTime: Date,
     var status: BallotStatus,

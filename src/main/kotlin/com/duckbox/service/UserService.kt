@@ -51,7 +51,7 @@ class UserService (
         }
     }
 
-    fun register(registerDto: RegisterDto) {
+    fun register(registerDto: RegisterDto): ResponseEntity<String> {
         // check duplicate
         runCatching {
             userRepository.findByEmail(registerDto.email)
@@ -86,6 +86,11 @@ class UserService (
                 votes = mutableListOf(),
             )
         )
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                did
+            )
     }
 
     fun login(loginRequestDto: LoginRequestDto): ResponseEntity<LoginResponseDto> {

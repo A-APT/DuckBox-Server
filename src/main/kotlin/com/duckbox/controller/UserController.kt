@@ -16,9 +16,8 @@ class UserController(
 ) {
 
     @PostMapping("/api/v1/user/register")
-    fun register(@RequestBody registerDto: RegisterDto): ResponseEntity<Unit> {
-        userService.register(registerDto)
-        return ResponseEntity.noContent().build()
+    fun register(@RequestBody registerDto: RegisterDto): ResponseEntity<String> {
+        return userService.register(registerDto)
     }
 
     @PostMapping("/api/v1/user/login")

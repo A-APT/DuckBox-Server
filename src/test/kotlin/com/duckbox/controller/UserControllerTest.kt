@@ -89,9 +89,10 @@ class UserControllerTest {
 
         // act, assert
         restTemplate
-            .postForEntity("${baseAddress}/api/v1/user/register", registerDto, Unit::class.java)
+            .postForEntity("${baseAddress}/api/v1/user/register", registerDto, String::class.java)
             .apply {
-                assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+                assertThat(statusCode).isEqualTo(HttpStatus.OK)
+                assertThat(body!!).isEqualTo(userRepository.findByEmail(mockRegisterDto.email).did)
             }
     }
 
@@ -102,7 +103,7 @@ class UserControllerTest {
 
         // act, assert
         restTemplate
-            .postForEntity("${baseAddress}/api/v1/user/register", mockRegisterDto, Unit::class.java)
+            .postForEntity("${baseAddress}/api/v1/user/register", mockRegisterDto, String::class.java)
             .apply {
                 assertThat(statusCode).isEqualTo(HttpStatus.CONFLICT)
             }

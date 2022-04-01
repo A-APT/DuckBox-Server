@@ -71,12 +71,13 @@ class UserServiceTest {
     @Test
     fun is_register_works_well() {
         // act
-        userService.register(mockRegisterDto)
+        val did: String = userService.register(mockRegisterDto).body!!
 
         // assert
         val user: User = userRepository.findByEmail(mockRegisterDto.email)
         assertThat(user.email).isEqualTo(mockRegisterDto.email)
         assertThat(user.password).isEqualTo(mockRegisterDto.password)
+        assertThat(user.did).isEqualTo(did)
 
         val userBox: UserBox = userBoxRepository.findByEmail(mockRegisterDto.email)
         assertThat(userBox.id).isEqualTo(user.id)

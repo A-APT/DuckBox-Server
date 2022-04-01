@@ -1,0 +1,41 @@
+package com.duckbox.helper
+
+import com.duckbox.domain.vote.BallotStatus
+import com.duckbox.domain.vote.VoteEntity
+import com.duckbox.domain.vote.VoteRepository
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+import java.util.*
+
+@Component
+class VoteScheduler (
+    private val voteRepository: VoteRepository,
+){
+
+    @Scheduled(cron = "0 5 * * * ?")
+    fun voteStatusTask() {
+        // every 5 minute, check vote startTime and finishTime
+        val now: Date = Date()
+
+        // try to close vote for ONGOING vote
+        val ongoingVoteList: MutableList<VoteEntity> = voteRepository.findAllByStatus(BallotStatus.ONGOING)
+        ongoingVoteList.forEach {
+            if (it.finishTime <= now) {
+                it.status = BallotStatus.FINISHED
+                voteRepository.save(it)
+                // TODO to ethereum
+            }
+        }
+
+        // try to start vote for OPEN vote
+        val openVoteList: MutableList<VoteEntity> = voteRepository.findAllByStatus(BallotStatus.OPEN)
+        openVoteList.forEach {
+            if (it.startTime <= now) {
+                it.status = BallotStatus.ONGOING
+                voteRepository.save(it)
+                // TODO to ethereum
+            }
+        }
+    }
+
+}

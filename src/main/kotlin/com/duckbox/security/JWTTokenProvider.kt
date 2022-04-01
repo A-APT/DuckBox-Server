@@ -22,8 +22,8 @@ class JWTTokenProvider(private val userDetailsService: CustomUserDetailsService)
     val HEADER_STRING: String = "authorization" // for HttpHeaders (Authorization)
     val TOKEN_PREFIX: String = "Bearer"
 
-    private val tokenPeriod: Long = 1000L * 60L * 10L // 10 minute
-    private val refreshTokenPeriod: Long = 1000L * 60L * 60L * 24L * 30L * 3L // 3 weeks
+    private val tokenPeriod: Long = 1000L * 60L * 60L * 24L * 7L // 1 week
+    private val refreshTokenPeriod: Long = 1000L * 60L * 60L * 24L * 7L * 3L // 3 weeks
 
     fun generateToken(userPK: String, roles: List<String>): JWTToken {
         val claims: Claims = Jwts.claims().setSubject(userPK).apply {

@@ -43,13 +43,13 @@ tasks.jacocoTestCoverageVerification {
             limit {
                 counter = "BRANCH"
                 value = "COVEREDRATIO"
-                minimum = "0.90".toBigDecimal()
+                minimum = "0.80".toBigDecimal()
             }
 
             limit {
                 counter = "LINE"
                 value = "COVEREDRATIO"
-                minimum = "0.90".toBigDecimal()
+                minimum = "0.80".toBigDecimal()
             }
 
             limit {
@@ -64,7 +64,9 @@ tasks.jacocoTestCoverageVerification {
                 "com.duckbox.dto.**",
                 "com.duckbox.errors.**",
                 "com.duckbox.security.JWTTokenProvider**", //
-                "com.duckbox.service.ethereum.**" //
+                "com.duckbox.service.ethereum.**", //
+                "com.duckbox.service.SMSService**",
+                "com.duckbox.helper.EthereumListener**"
             )
         }
     }

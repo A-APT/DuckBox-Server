@@ -20,6 +20,11 @@ class VoteController (
         return ResponseEntity.noContent().build()
     }
 
+    @GetMapping("/api/v1/vote")
+    fun getAllVote(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<List<VoteDetailDto>> {
+        return voteService.getAllVote()
+    }
+
     @GetMapping("/api/v1/vote/group/{groupId}")
     fun findVotesOfGroup(@RequestHeader httpHeaders: Map<String, String>, @PathVariable groupId: String): ResponseEntity<List<VoteDetailDto>> {
         return voteService.findVotesOfGroup(groupId)

@@ -132,6 +132,29 @@ class VoteServiceTest {
     }
 
     @Test
+    fun is_getAllVote_works_ok_when_empty() {
+        // act
+        val voteList: List<VoteDetailDto> = voteService.getAllVote().body!!
+
+        // assert
+        assertThat(voteList.size).isEqualTo(0)
+    }
+
+    @Test
+    fun is_getAllVote_works_ok() {
+        // arrange
+        registerMockUser()
+        val voteId: ObjectId = voteService.registerVote(mockUserEmail, mockVoteRegisterDto)
+
+        // act
+        val voteList: List<VoteDetailDto> = voteService.getAllVote().body!!
+
+        // assert
+        assertThat(voteList.size).isEqualTo(1)
+        assertThat(voteList[0].id).isEqualTo(voteId.toString())
+    }
+
+    @Test
     fun is_findVotesOfGroup_works_ok() {
         // arrange
         val groupId: String = registerMockUserAndGroup()

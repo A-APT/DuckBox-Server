@@ -158,6 +158,25 @@ class VoteControllerTest {
     }
 
     @Test
+    fun is_getAllVote_works_well() {
+        // arrange
+        val token: String = registerAndLogin() // register user
+        val httpHeaders = HttpHeaders()
+        httpHeaders["Authorization"] = "Bearer $token"
+        voteService.registerVote(mockUserEmail, mockVoteRegisterDto) // register vote
+
+        val httpEntity = HttpEntity<String>(null, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/vote", HttpMethod.GET, httpEntity, Array<VoteDetailDto>::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.OK)
+                assertThat(body!!.size).isEqualTo(1)
+            }
+    }
+
+    @Test
     fun is_findVotesOfGroup_works_well() {
         // arrange
         val token: String = registerAndLogin() // register user

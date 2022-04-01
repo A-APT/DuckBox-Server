@@ -65,6 +65,23 @@ class VoteService (
         return id
     }
 
+    fun getAllVote(): ResponseEntity<List<VoteDetailDto>> {
+        val voteList: MutableList<VoteDetailDto> = mutableListOf()
+        voteRepository.findAll().forEach {
+            // get images
+            val images: MutableList<ByteArray> = mutableListOf()
+            it.images.forEach { photoId ->
+                images.add(photoService.getPhoto(photoId).data)
+            }
+            voteList.add(it.toVoteDetailDto(images))
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                voteList
+            )
+    }
+
     fun findVotesOfGroup(_groupId: String): ResponseEntity<List<VoteDetailDto>> {
         val groupId: ObjectId = ObjectId(_groupId) // invalid group returns 0 size voteList
         val voteList: MutableList<VoteDetailDto> = mutableListOf()

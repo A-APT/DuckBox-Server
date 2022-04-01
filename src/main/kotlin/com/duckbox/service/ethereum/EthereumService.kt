@@ -17,8 +17,10 @@ import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
 import org.web3j.protocol.core.methods.response.EthSendTransaction
 import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.tx.RawTransactionManager
+import org.web3j.tx.Transfer
 import org.web3j.tx.gas.DefaultGasProvider
 import org.web3j.utils.Convert
+import java.math.BigDecimal
 import java.math.BigInteger
 
 @PropertySource("classpath:ethereum.properties")
@@ -100,6 +102,17 @@ class EthereumService(private val web3j: Web3j) {
         // decode response
         val decode = FunctionReturnDecoder.decode(ethSend.result, function.outputParameters)
         return if (decode.size > 0) decode[0].value else null
+    }
+
+    fun sendEth(toAddress: String) {
+        val credentials: Credentials = Credentials.create(ownerPrivate)
+        runCatching {
+            val transactionReceipt: TransactionReceipt = Transfer.sendFunds( // send 10 eth
+                web3j, credentials, toAddress, BigDecimal.valueOf(10.0), Convert.Unit.ETHER
+            ).send()
+        }.onFailure {
+            throw EthereumException("Fail to send eth to address[$toAddress]. Please check the address.")
+        }
     }
 
     fun getReceipt(transactionHash: String): TransactionReceipt? {

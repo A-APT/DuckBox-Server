@@ -32,14 +32,16 @@ class UserController(
     }
 
     @PostMapping("/api/v1/user/group")
-    fun joinGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody joinGroupRequestDto: JoinGroupRequestDto): ResponseEntity<Unit> {
-        userService.joinGroup(joinGroupRequestDto.email, joinGroupRequestDto.groupId)
+    fun joinGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupId: String): ResponseEntity<Unit> {
+        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
+        userService.joinGroup(userEmail, groupId)
         return ResponseEntity.noContent().build()
     }
 
     @PostMapping("/api/v1/user/vote")
-    fun joinVote(@RequestHeader httpHeaders: Map<String, String>, @RequestBody joinVoteRequestDto: JoinVoteRequestDto): ResponseEntity<Unit> {
-        userService.joinVote(joinVoteRequestDto.email, joinVoteRequestDto.voteId)
+    fun joinVote(@RequestHeader httpHeaders: Map<String, String>, @RequestBody voteId: String): ResponseEntity<Unit> {
+        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
+        userService.joinVote(userEmail, voteId)
         return ResponseEntity.noContent().build()
     }
 

@@ -6,6 +6,7 @@ import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.JWTToken
+import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.user.*
 import com.duckbox.errors.exception.NotFoundException
@@ -326,6 +327,28 @@ class UserControllerTest {
             .exchange("${baseAddress}/api/v1/user/vote", HttpMethod.POST, httpEntity, NotFoundException::class.java)
             .apply {
                 assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_findGroupsByUser_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
+        userService.joinGroup(mockRegisterDto.email, groupId.toString())
+
+        val httpEntity = HttpEntity(null, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/user/group", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.OK)
+                assertThat(body!!.size).isEqualTo(1)
             }
     }
 }

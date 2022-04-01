@@ -1,17 +1,19 @@
 package com.duckbox.controller
 
 import com.duckbox.dto.JWTToken
+import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.user.*
+import com.duckbox.security.JWTTokenProvider
 import com.duckbox.service.UserService
 import org.bson.types.ObjectId
 import org.springframework.http.ResponseEntity
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestHeader
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
-class UserController(private val userService: UserService) {
+class UserController(
+    private val userService: UserService,
+    private val jwtTokenProvider: JWTTokenProvider,
+) {
 
     @PostMapping("/api/v1/user/register")
     fun register(@RequestBody registerDto: RegisterDto): ResponseEntity<Unit> {
@@ -41,4 +43,9 @@ class UserController(private val userService: UserService) {
         return ResponseEntity.noContent().build()
     }
 
+    @GetMapping("/api/v1/user/group")
+    fun getGroupsByUser(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<List<GroupDetailDto>> {
+        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
+        return userService.findGroupsByUser(userEmail)
+    }
 }

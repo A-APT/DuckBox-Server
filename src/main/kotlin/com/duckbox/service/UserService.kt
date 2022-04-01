@@ -5,9 +5,9 @@ import com.duckbox.domain.user.User
 import com.duckbox.domain.user.UserBox
 import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
-import com.duckbox.domain.vote.VoteEntity
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.JWTToken
+import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
@@ -162,6 +162,19 @@ class UserService (
 
         userBox.votes.add(voteObjectId)
         userBoxRepository.save(userBox)
+    }
+
+    fun findGroupsByUser(userEmail: String): ResponseEntity<List<GroupDetailDto>> {
+        val groupIdList: MutableList<ObjectId> = userBoxRepository.findByEmail(userEmail).groups
+        val groupDtoList: MutableList<GroupDetailDto> = mutableListOf()
+        groupIdList.forEach {
+            groupDtoList.add(groupRepository.findById(it).get().toGroupDetailDto())
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                groupDtoList
+            )
     }
 
 }

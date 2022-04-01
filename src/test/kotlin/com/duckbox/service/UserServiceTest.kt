@@ -8,6 +8,7 @@ import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.JWTToken
+import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
@@ -353,5 +354,34 @@ class UserServiceTest {
             assertThat(it is NotFoundException).isEqualTo(true)
             assertThat(it.message).isEqualTo("User [${invalidEmail}] was not registered.")
         }
+    }
+
+    @Test
+    fun is_findGroupsByUser_works_well() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
+        userService.joinGroup(mockRegisterDto.email, groupId.toString())
+
+        // act
+        val groupList: List<GroupDetailDto> = userService.findGroupsByUser(mockRegisterDto.email).body!!
+
+        // assert
+        assertThat(groupList.size).isEqualTo(1)
+    }
+
+    @Test
+    fun is_findGroupsByUser_works_well_when_empty_joined_group() {
+        // arrange
+        userService.register(mockRegisterDto)
+        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
+
+        // act
+        val groupList: List<GroupDetailDto> = userService.findGroupsByUser(mockRegisterDto.email).body!!
+
+        // assert
+        assertThat(groupList.size).isEqualTo(0)
     }
 }

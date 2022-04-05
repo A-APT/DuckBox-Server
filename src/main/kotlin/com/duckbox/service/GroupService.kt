@@ -23,7 +23,9 @@ class GroupService (
     fun getGroups(): ResponseEntity<List<GroupDetailDto>> {
         val groupDtoList: MutableList<GroupDetailDto> = mutableListOf()
         groupRepository.findAll().forEach {
-            groupDtoList.add(it.toGroupDetailDto())
+            val profile: ByteArray? = if(it.profile != null) photoService.getPhoto(it.profile!!).data else null
+            val header: ByteArray? = if(it.header != null) photoService.getPhoto(it.header!!).data else null
+            groupDtoList.add(it.toGroupDetailDto(profile, header))
         }
         return ResponseEntity
             .status(HttpStatus.OK)

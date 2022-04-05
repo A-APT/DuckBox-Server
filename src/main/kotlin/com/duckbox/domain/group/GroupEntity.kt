@@ -16,10 +16,11 @@ class GroupEntity (
     var profile: ObjectId? = null, // image
     var header: ObjectId? = null, // image
 ) {
-    fun toGroupDetailDto(): GroupDetailDto {
+    fun toGroupDetailDto(_profile: ByteArray?, _header: ByteArray?): GroupDetailDto {
         return GroupDetailDto(
             id = id.toString(), // change ObjectId to String
-            name, leader, status, description
+            name, leader, status, description,
+            _profile, _header
         )
     }
 }

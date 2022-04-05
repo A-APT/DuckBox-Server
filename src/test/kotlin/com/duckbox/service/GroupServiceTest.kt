@@ -73,6 +73,8 @@ class GroupServiceTest {
         // arrange
         registerMockUser()
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        mockDto.profile = "profile file!".toByteArray()
+        mockDto.header = "header file!".toByteArray()
         groupService.registerGroup(mockUserEmail, mockDto)
 
         // act
@@ -80,6 +82,8 @@ class GroupServiceTest {
 
         // assert
         assertThat(groupList.size).isEqualTo(1)
+        assertThat(groupList[0].profile).isEqualTo(mockDto.profile)
+        assertThat(groupList[0].header).isEqualTo(mockDto.header)
     }
 
     @Test

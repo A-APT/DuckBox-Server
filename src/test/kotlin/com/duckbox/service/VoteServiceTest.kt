@@ -144,7 +144,9 @@ class VoteServiceTest {
     fun is_getAllVote_works_ok() {
         // arrange
         registerMockUser()
-        val voteId: ObjectId = voteService.registerVote(mockUserEmail, mockVoteRegisterDto)
+        val binaryFile: ByteArray = "test file!".toByteArray()
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(images = listOf(binaryFile))
+        val voteId: ObjectId = voteService.registerVote(mockUserEmail, mockDto)
 
         // act
         val voteList: List<VoteDetailDto> = voteService.getAllVote().body!!
@@ -152,6 +154,7 @@ class VoteServiceTest {
         // assert
         assertThat(voteList.size).isEqualTo(1)
         assertThat(voteList[0].id).isEqualTo(voteId.toString())
+        assertThat(voteList[0].images[0]).isEqualTo(binaryFile)
     }
 
     @Test

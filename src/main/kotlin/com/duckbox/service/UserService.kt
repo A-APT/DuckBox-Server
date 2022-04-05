@@ -1,5 +1,6 @@
 package com.duckbox.service
 
+import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.user.User
 import com.duckbox.domain.user.UserBox
@@ -30,6 +31,7 @@ class UserService (
     private val voteRepository: VoteRepository,
     private val jwtTokenProvider: JWTTokenProvider,
     private val hashUtils: HashUtils,
+    private val photoService: PhotoService,
     private val didService: DIdService
     ) {
 
@@ -173,7 +175,11 @@ class UserService (
         val groupIdList: MutableList<ObjectId> = userBoxRepository.findByEmail(userEmail).groups
         val groupDtoList: MutableList<GroupDetailDto> = mutableListOf()
         groupIdList.forEach {
-            groupDtoList.add(groupRepository.findById(it).get().toGroupDetailDto())
+            val groupEntity: GroupEntity = groupRepository.findById(it).get()
+            val profile: ByteArray? = if(groupEntity.profile != null) photoService.getPhoto(groupEntity.profile!!).data else null
+            val header: ByteArray? = if(groupEntity.header != null) photoService.getPhoto(groupEntity.header!!).data else null
+            groupDtoList.add(groupEntity.toGroupDetailDto(profile, header))
+
         }
         return ResponseEntity
             .status(HttpStatus.OK)

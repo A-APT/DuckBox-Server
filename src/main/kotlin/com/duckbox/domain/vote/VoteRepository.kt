@@ -8,5 +8,5 @@ import org.springframework.stereotype.Repository
 interface VoteRepository: MongoRepository<VoteEntity, ObjectId> {
     fun findByTitle(title: String): VoteEntity
     fun findAllByStatus(status: BallotStatus): MutableList<VoteEntity>
-    fun findAllByOwner(ownerId: String): MutableList<VoteEntity>
+    fun findAllByGroupId(groupId: String): MutableList<VoteEntity>
 }

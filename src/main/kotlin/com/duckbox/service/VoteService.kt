@@ -22,16 +22,13 @@ class VoteService (
 ) {
 
     fun registerVote(userEmail: String, voteRegisterDto: VoteRegisterDto): ObjectId {
-        lateinit var ownerId: String
+        val owner: String = userRepository.findByEmail(userEmail).nickname
         if (voteRegisterDto.isGroup) { // check groupId is valid
             runCatching {
-                groupRepository.findById(ObjectId(voteRegisterDto.owner)).get()
+                groupRepository.findById(ObjectId(voteRegisterDto.groupId)).get()
             }.onFailure {
-                throw NotFoundException("Invalid GroupId: [${voteRegisterDto.owner}]")
+                throw NotFoundException("Invalid GroupId: [${voteRegisterDto.groupId}]")
             }
-            ownerId = voteRegisterDto.owner!!
-        } else {
-            ownerId = userRepository.findByEmail(userEmail).id.toString()
         }
 
         // upload images if exists
@@ -46,7 +43,8 @@ class VoteService (
                 title = voteRegisterDto.title,
                 content = voteRegisterDto.content,
                 isGroup = voteRegisterDto.isGroup,
-                owner = ownerId,
+                groupId = voteRegisterDto.groupId,
+                owner = owner,
                 startTime = voteRegisterDto.startTime,
                 finishTime = voteRegisterDto.finishTime,
                 status = BallotStatus.OPEN,
@@ -85,7 +83,7 @@ class VoteService (
     fun findVotesOfGroup(_groupId: String): ResponseEntity<List<VoteDetailDto>> {
         val groupId: ObjectId = ObjectId(_groupId) // invalid group returns 0 size voteList
         val voteList: MutableList<VoteDetailDto> = mutableListOf()
-        voteRepository.findAllByOwner(groupId.toString()).forEach {
+        voteRepository.findAllByGroupId(groupId.toString()).forEach {
             // get images
             val images: MutableList<ByteArray> = mutableListOf()
             it.images.forEach { photoId ->

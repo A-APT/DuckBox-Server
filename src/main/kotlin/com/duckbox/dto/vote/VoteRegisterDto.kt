@@ -6,7 +6,7 @@ data class VoteRegisterDto (
     val title: String,
     val content: String,
     val isGroup: Boolean,
-    val owner: String?, // groupId(ObjectId) if group vote else userId(Long)
+    var groupId: String?, // groupId(ObjectId) if isGroup is true
     val startTime: Date,
     val finishTime: Date,
     var images: List<ByteArray>, // image list

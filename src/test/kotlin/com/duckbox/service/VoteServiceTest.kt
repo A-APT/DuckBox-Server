@@ -9,6 +9,8 @@ import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
+import com.duckbox.errors.exception.ForbiddenException
+import com.duckbox.errors.exception.NotFoundException
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -90,7 +92,8 @@ class VoteServiceTest {
             assertThat(content).isEqualTo(mockVoteRegisterDto.content)
             assertThat(isGroup).isEqualTo(mockVoteRegisterDto.isGroup)
             assertThat(images.size).isEqualTo(0)
-            assertThat(owner).isEqualTo(userRepository.findByEmail(mockUserEmail).id.toString())
+            assertThat(groupId).isEqualTo(null)
+            assertThat(owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
         }
     }
 
@@ -98,7 +101,7 @@ class VoteServiceTest {
     fun is_registerVote_works_well_on_group_vote() {
         // act
         val groupId: String = registerMockUserAndGroup()
-        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, owner = groupId)
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, groupId = groupId)
         val id = voteService.registerVote(mockUserEmail, mockDto)
 
         // assert
@@ -107,7 +110,43 @@ class VoteServiceTest {
             assertThat(content).isEqualTo(mockDto.content)
             assertThat(isGroup).isEqualTo(mockDto.isGroup)
             assertThat(images.size).isEqualTo(0)
-            assertThat(owner).isEqualTo(groupId)
+            assertThat(groupId).isEqualTo(groupId)
+            assertThat(owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
+        }
+    }
+
+    @Test
+    fun is_registerVote_works_well_on_groupId_is_null_on_group_vote() {
+        // arrange
+        registerMockUser()
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, groupId = null)
+
+        // act & assert
+        runCatching {
+            voteService.registerVote(mockUserEmail, mockDto)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Invalid GroupId: [${null}]")
+        }
+    }
+
+    @Test
+    fun is_registerVote_works_well_on_unregistered_group_vote() {
+        // arrange
+        registerMockUser()
+        val invalidId = ObjectId().toString()
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, groupId = invalidId)
+
+        // act & assert
+        runCatching {
+            voteService.registerVote(mockUserEmail, mockDto)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Invalid GroupId: [${invalidId}]")
         }
     }
 
@@ -155,13 +194,14 @@ class VoteServiceTest {
         assertThat(voteList.size).isEqualTo(1)
         assertThat(voteList[0].id).isEqualTo(voteId.toString())
         assertThat(voteList[0].images[0]).isEqualTo(binaryFile)
+        assertThat(voteList[0].owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
     }
 
     @Test
     fun is_findVotesOfGroup_works_ok() {
         // arrange
         val groupId: String = registerMockUserAndGroup()
-        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, owner = groupId)
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, groupId = groupId)
         val binaryFile: ByteArray = "test file!".toByteArray()
         mockDto.images = listOf(binaryFile)
         val voteId: ObjectId = voteService.registerVote(mockUserEmail, mockDto)
@@ -173,6 +213,7 @@ class VoteServiceTest {
         assertThat(voteList.size).isEqualTo(1)
         assertThat(voteList[0].id).isEqualTo(voteId.toString())
         assertThat(voteList[0].images[0]).isEqualTo(binaryFile)
+        assertThat(voteList[0].owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
     }
 
     @Test

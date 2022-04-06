@@ -30,7 +30,7 @@ object MockDto {
         title = "title",
         content = "content",
         isGroup = false,
-        owner = null,
+        groupId = null,
         startTime = Date(),
         finishTime = Date(),
         images = listOf(),

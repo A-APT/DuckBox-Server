@@ -87,7 +87,7 @@ class UserServiceTest {
     }
 
     @Test
-    fun is_register_works_on_duplicate() {
+    fun is_register_works_on_duplicate_email() {
         // act
         userService.register(mockRegisterDto)
         runCatching {
@@ -97,6 +97,21 @@ class UserServiceTest {
         }.onFailure {
             assertThat(it is ConflictException).isEqualTo(true)
             assertThat(it.message).isEqualTo("User email [${mockRegisterDto.email}] is already registered.")
+        }
+    }
+
+    @Test
+    fun is_register_works_on_duplicate_nickname() {
+        // act
+        userService.register(mockRegisterDto)
+        val mockDto = mockRegisterDto.copy(email = "new@com")
+        runCatching {
+            userService.register(mockDto)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is ConflictException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User nickname [${mockDto.nickname}] is already registered.")
         }
     }
 
@@ -328,7 +343,7 @@ class UserServiceTest {
         val targetDid: String = userRepository.findByEmail(mockRegisterDto.email).did
 
         val invalidEmail = "test@com"
-        userService.register(mockRegisterDto.copy(email = invalidEmail))
+        userService.register(mockRegisterDto.copy(email = invalidEmail, nickname = "new"))
 
         // act & assert
         runCatching {

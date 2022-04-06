@@ -278,7 +278,7 @@ class GroupServiceTest {
                 password = "test",
                 email = invalidEmail,
                 phoneNumber = "01012341234",
-                nickname = "duck",
+                nickname = "new",
                 college = "ku",
                 department = listOf("computer", "software")
             )

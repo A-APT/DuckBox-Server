@@ -54,11 +54,17 @@ class UserService (
     }
 
     fun register(registerDto: RegisterDto): ResponseEntity<String> {
-        // check duplicate
+        // check duplicate: email
         runCatching {
             userRepository.findByEmail(registerDto.email)
         }.onSuccess {
             throw ConflictException("User email [${registerDto.email}] is already registered.")
+        }
+        // check duplicate: nickname
+        runCatching {
+            userRepository.findByNickname(registerDto.nickname)
+        }.onSuccess {
+            throw ConflictException("User nickname [${registerDto.nickname}] is already registered.")
         }
 
         // send transaction

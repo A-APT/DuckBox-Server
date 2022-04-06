@@ -35,7 +35,7 @@ class VoteEntity (
 }
 
 enum class BallotStatus {
+    REGISTERED,
     OPEN,
-    ONGOING,
     FINISHED,
 }

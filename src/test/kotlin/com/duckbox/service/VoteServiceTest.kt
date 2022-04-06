@@ -4,6 +4,7 @@ import com.duckbox.MockDto
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.photo.PhotoRepository
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.domain.vote.BallotStatus
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.user.RegisterDto
@@ -94,6 +95,7 @@ class VoteServiceTest {
             assertThat(images.size).isEqualTo(0)
             assertThat(groupId).isEqualTo(null)
             assertThat(owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
+            assertThat(status).isEqualTo(BallotStatus.REGISTERED)
         }
     }
 

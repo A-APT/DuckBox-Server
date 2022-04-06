@@ -45,6 +45,7 @@ class VoteSchedulerTest {
     @AfterEach
     fun init() {
         voteRepository.deleteAll()
+        userRepository.deleteAll()
         photoRepository.deleteAll()
     }
 
@@ -66,16 +67,58 @@ class VoteSchedulerTest {
         val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(startTime = startTime, finishTime = finishTime)
         val id = voteService.registerVote(mockUserEmail, mockDto)
 
-        // act
+        // act & assert: start Ballot
         voteScheduler.voteStatusTask()
         voteRepository.findById(id).get().apply {
-            Assertions.assertThat(status).isEqualTo(BallotStatus.ONGOING)
+            Assertions.assertThat(status).isEqualTo(BallotStatus.OPEN)
         }
 
-        // assert
+        // act & assert: close Ballot
         voteScheduler.voteStatusTask()
         voteRepository.findById(id).get().apply {
             Assertions.assertThat(status).isEqualTo(BallotStatus.FINISHED)
+        }
+    }
+
+    @Test
+    fun is_voteStatusTask_works_well_when_before_the_startTime() {
+        // arrange
+        registerMockUser()
+        val now: Date = Date()
+        val startTime = Date(now.time + 1000000)
+        val finishTime = Date(now.time + 100000000)
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(startTime = startTime, finishTime = finishTime)
+        val id = voteService.registerVote(mockUserEmail, mockDto)
+
+        // act
+        voteScheduler.voteStatusTask()
+
+        // assert
+        voteRepository.findById(id).get().apply {
+            Assertions.assertThat(status).isEqualTo(BallotStatus.REGISTERED)
+        }
+    }
+
+    @Test
+    fun is_voteStatusTask_works_well_when_before_the_endTime() {
+        // arrange
+        registerMockUser()
+        val now: Date = Date()
+        val startTime = Date(now.time - 100)
+        val finishTime = Date(now.time + 1000000000)
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(startTime = startTime, finishTime = finishTime)
+        val id = voteService.registerVote(mockUserEmail, mockDto)
+
+        // act
+        voteScheduler.voteStatusTask()
+        voteRepository.findById(id).get().apply {
+            Assertions.assertThat(status).isEqualTo(BallotStatus.OPEN)
+        }
+        voteScheduler.voteStatusTask()
+
+        // assert: can't close Ballot now
+        voteRepository.findById(id).get().apply {
+            Assertions.assertThat(status).isEqualTo(BallotStatus.OPEN)
         }
     }
 }

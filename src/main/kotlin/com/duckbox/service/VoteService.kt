@@ -47,7 +47,7 @@ class VoteService (
                 owner = owner,
                 startTime = voteRegisterDto.startTime,
                 finishTime = voteRegisterDto.finishTime,
-                status = BallotStatus.OPEN,
+                status = BallotStatus.REGISTERED,
                 images = idOfImages.toList(),
                 candidates = voteRegisterDto.candidates,
                 voters = voteRegisterDto.voters,

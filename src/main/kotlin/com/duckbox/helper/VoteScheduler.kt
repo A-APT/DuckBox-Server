@@ -17,9 +17,9 @@ class VoteScheduler (
         // every 5 minute, check vote startTime and finishTime
         val now: Date = Date()
 
-        // try to close vote for ONGOING vote
-        val ongoingVoteList: MutableList<VoteEntity> = voteRepository.findAllByStatus(BallotStatus.ONGOING)
-        ongoingVoteList.forEach {
+        // try to close vote for OPEN vote
+        val openVoteList: MutableList<VoteEntity> = voteRepository.findAllByStatus(BallotStatus.OPEN)
+        openVoteList.forEach {
             if (it.finishTime <= now) {
                 it.status = BallotStatus.FINISHED
                 voteRepository.save(it)
@@ -27,11 +27,11 @@ class VoteScheduler (
             }
         }
 
-        // try to start vote for OPEN vote
-        val openVoteList: MutableList<VoteEntity> = voteRepository.findAllByStatus(BallotStatus.OPEN)
-        openVoteList.forEach {
+        // try to start vote for REGISTERED vote
+        val registeredVoteList: MutableList<VoteEntity> = voteRepository.findAllByStatus(BallotStatus.REGISTERED)
+        registeredVoteList.forEach {
             if (it.startTime <= now) {
-                it.status = BallotStatus.ONGOING
+                it.status = BallotStatus.OPEN
                 voteRepository.save(it)
                 // TODO to ethereum
             }

@@ -85,7 +85,7 @@ class VoteServiceTest {
     fun is_registerVote_works_well_on_not_group_vote() {
         // act
         registerMockUser()
-        val id = voteService.registerVote(mockUserEmail, mockVoteRegisterDto)
+        val id = voteService.registerVote(mockUserEmail, mockVoteRegisterDto.copy(voters=null))
 
         // assert
         voteRepository.findById(id).get().apply {
@@ -94,6 +94,7 @@ class VoteServiceTest {
             assertThat(isGroup).isEqualTo(mockVoteRegisterDto.isGroup)
             assertThat(images.size).isEqualTo(0)
             assertThat(groupId).isEqualTo(null)
+            assertThat(voters).isEqualTo(null)
             assertThat(owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
             assertThat(status).isEqualTo(BallotStatus.REGISTERED)
         }
@@ -113,6 +114,7 @@ class VoteServiceTest {
             assertThat(isGroup).isEqualTo(mockDto.isGroup)
             assertThat(images.size).isEqualTo(0)
             assertThat(groupId).isEqualTo(groupId)
+            assertThat(voters).isNotEqualTo(null)
             assertThat(owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
         }
     }

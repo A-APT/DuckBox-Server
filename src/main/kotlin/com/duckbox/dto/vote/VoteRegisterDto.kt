@@ -11,7 +11,7 @@ data class VoteRegisterDto (
     val finishTime: Date,
     var images: List<ByteArray>, // image list
     val candidates: List<String>,
-    val voters: List<Int>, // student id
+    val voters: List<Int>?, // student id. null if isGroup is false or all group member have right to vote
     val reward: Boolean,
     var notice: Boolean
 )

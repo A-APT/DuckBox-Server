@@ -13,6 +13,12 @@ buildscript {
     }
 }
 
+allprojects {
+    repositories {
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+
 plugins {
     java
     kotlin("jvm") version "1.4.21"
@@ -135,6 +141,9 @@ dependencies {
     // swagger
     implementation("io.springfox:springfox-swagger2:2.9.2")
     implementation("io.springfox:springfox-swagger-ui:2.9.2")
+
+    // BlindSignature by AAPT
+    implementation("com.github.A-APT:BlindSignature:1.0.0")
 }
 
 tasks.test {

@@ -16,24 +16,17 @@ class DIdService(private val ethereumService: EthereumService) {
 
     private final val REGISTER = "registerId"
     private final val UNREGISTER = "removeId"
-    private final val GET = "getId"
 
-    fun registerDid(did: String): Boolean? {
-        val inputParams = listOf<Type<*>>(Utf8String(did))
+    fun registerDid(address: String, did: String): Boolean? {
+        val inputParams = listOf<Type<*>>(Address(address), Utf8String(did))
         val outputParams = listOf<TypeReference<*>>(object: TypeReference<Bool>() {})
-        return ethereumService.ethSend(contractAddress, REGISTER, inputParams, outputParams) as Boolean?
+        return ethereumService.ethSendRaw(contractAddress, REGISTER, inputParams, outputParams) as Boolean?
     }
 
-    fun removeDid(did: String) {
-        val inputParams = listOf<Type<*>>(Utf8String(did))
+    fun removeDid(address: String) {
+        val inputParams = listOf<Type<*>>(Address(address))
         val outputParams = listOf<TypeReference<*>>()
-        ethereumService.ethSend(contractAddress, UNREGISTER, inputParams, outputParams)
-    }
-
-    fun getDid(did: String): String? {
-        val inputParams = listOf<Type<*>>(Utf8String(did))
-        val outputParams = listOf<TypeReference<*>>(object: TypeReference<Utf8String>() {})
-        return ethereumService.ethCall(contractAddress, GET, inputParams, outputParams) as String?
+        ethereumService.ethSendRaw(contractAddress, UNREGISTER, inputParams, outputParams)
     }
 
     fun getOwner(): String? {

@@ -33,6 +33,8 @@ class EthereumService(private val web3j: Web3j) {
     @Value("\${contract.owner-private}")
     private lateinit var ownerPrivate: String
 
+    val gasPrice: BigInteger = web3j.ethGasPrice().sendAsync().get().gasPrice
+    val gasLimit: BigInteger = BigInteger.valueOf(80000) // gasLimit (ropsten)
 
     fun ethCall(contractAddress: String, functionName: String, inputParams: List<Type<*>>, outputParams: List<TypeReference<*>>): Any? {
         // generate function
@@ -82,8 +84,8 @@ class EthereumService(private val web3j: Web3j) {
         val credentials: Credentials = Credentials.create(ownerPrivate)
         val manager = RawTransactionManager(web3j, credentials)
         val ethSend: EthSendTransaction = manager.sendTransaction(
-            Convert.toWei("1", Convert.Unit.GWEI).toBigInteger(), // gasPrice
-            BigInteger.valueOf(80000), // gasLimit (ropsten)
+            gasPrice, // gasPrice
+            gasLimit, // gasLimit
             contractAddress, // to
             encodedFunction, // data
             BigInteger.ZERO // value

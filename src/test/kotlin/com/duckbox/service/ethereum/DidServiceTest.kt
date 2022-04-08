@@ -8,66 +8,36 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
+import org.springframework.beans.factory.annotation.Value
 
-// @SpringBootTest
-// @ExtendWith(SpringExtension::class)
+//@SpringBootTest
+@ExtendWith(SpringExtension::class)
 class DidServiceTest {
     @Autowired
     private lateinit var didService: DIdService
 
+    @Value("\${contract.owner}")
+    private lateinit var ownerAddress: String
+
     private val did = "did.test2"
 
     //@Test
-    fun is_registerDId_works_well() {
-        // arrange
-        didService.registerDid(did = did)
-
-        // act & assert
-        didService.getDid(did).apply { // TODO
-            assertThat(this!!).isEqualTo(did)
-        }
-
-        // clean up
-        didService.removeDid(did = did)
-    }
-
-    //@Test
-    fun is_registerDId_works_on_duplicate() {
-        didService.registerDid(did = did)
+    fun is_didService_works_well() {
+        didService.registerDid(address = ownerAddress, did = did)
         runCatching {
-            didService.registerDid(did = did)
+            didService.registerDid(address = ownerAddress, did = did)
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
             assertThat(it is EthereumException).isEqualTo(true)
         }
-
-        // clean up
-        didService.removeDid(did = did)
-    }
-
-    //@Test
-    fun is_removeDid_works_well() {
-        // arrange
-        didService.registerDid(did = did)
-
-        // act
-        didService.removeDid(did = did)
-
-        // assert
-        runCatching {
-            didService.getDid(did)
-        }.onSuccess {
-            fail("This should be failed.")
-        }.onFailure {
-            assertThat(it is EthereumException).isEqualTo(true)
-        }
+        didService.removeDid(address = ownerAddress)
     }
 
     //@Test
     fun is_getOwner_works_well() {
         didService.getOwner().apply {
-            println(this)
+            assertThat(this).isEqualTo(ownerAddress)
         }
     }
 }

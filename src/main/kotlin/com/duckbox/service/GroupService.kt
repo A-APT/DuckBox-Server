@@ -34,7 +34,7 @@ class GroupService (
             )
     }
 
-    fun registerGroup(userEmail: String, registerDto: GroupRegisterDto): ObjectId {
+    fun registerGroup(userEmail: String, registerDto: GroupRegisterDto): ResponseEntity<String> {
         // check did is correct
         userService.checkValidUser(userEmail, registerDto.leader)
 
@@ -54,7 +54,7 @@ class GroupService (
         }
 
         // save to server
-        return groupRepository.save(
+        val id: ObjectId = groupRepository.save(
             GroupEntity(
                 name = registerDto.name,
                 leader = registerDto.leader,
@@ -64,6 +64,12 @@ class GroupService (
                 header = headerImageId
             )
         ).id
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                id.toString()
+            )
     }
 
     fun updateGroup(userEmail: String, groupUpdateDto: GroupUpdateDto): GroupEntity {

@@ -223,15 +223,15 @@ class UserServiceTest {
         // arrange
         userService.register(mockRegisterDto)
         val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
-        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
+        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockDto).body!!
 
         // act
-        userService.joinGroup(mockRegisterDto.email, groupId.toString())
+        userService.joinGroup(mockRegisterDto.email, groupId)
 
         // assert
         userBoxRepository.findByEmail(mockRegisterDto.email).apply {
             assertThat(groups.size).isEqualTo(1)
-            assertThat(groups[0]).isEqualTo(groupId)
+            assertThat(groups[0]).isEqualTo(ObjectId(groupId))
         }
     }
 
@@ -240,12 +240,12 @@ class UserServiceTest {
         // arrange
         userService.register(mockRegisterDto)
         val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
-        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
+        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockDto).body!!
 
         // act & assert
         val invalidEmail = "test@com"
         runCatching {
-            userService.joinGroup(invalidEmail, groupId.toString())
+            userService.joinGroup(invalidEmail, groupId)
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
@@ -275,15 +275,15 @@ class UserServiceTest {
     fun is_joinVote_works_well() {
         // arrange
         userService.register(mockRegisterDto)
-        val voteId = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto)
+        val voteId: String = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto).body!!
 
         // act
-        userService.joinVote(mockRegisterDto.email, voteId.toString())
+        userService.joinVote(mockRegisterDto.email, voteId)
 
         // assert
         userBoxRepository.findByEmail(mockRegisterDto.email).apply {
             assertThat(votes.size).isEqualTo(1)
-            assertThat(votes[0]).isEqualTo(voteId)
+            assertThat(votes[0]).isEqualTo(ObjectId(voteId))
         }
     }
 
@@ -291,15 +291,16 @@ class UserServiceTest {
     fun is_joinVote_works_on_invalid_user() {
         // arrange
         userService.register(mockRegisterDto)
-        val voteId = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto)
+        val voteId: String = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto).body!!
         val invalidEmail = "invalid email"
 
         // act & assert
         runCatching {
-            userService.joinVote(invalidEmail, voteId.toString())
+            userService.joinVote(invalidEmail, voteId)
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
+            println(it)
             assertThat(it is NotFoundException).isEqualTo(true)
             assertThat(it.message).isEqualTo("User [$invalidEmail] was not registered.")
         }
@@ -381,8 +382,8 @@ class UserServiceTest {
         val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
         mockDto.profile = "profile file!".toByteArray()
         mockDto.header = "header file!".toByteArray()
-        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
-        userService.joinGroup(mockRegisterDto.email, groupId.toString())
+        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockDto).body!!
+        userService.joinGroup(mockRegisterDto.email, groupId)
 
         // act
         val groupList: List<GroupDetailDto> = userService.findGroupsByUser(mockRegisterDto.email).body!!
@@ -398,7 +399,7 @@ class UserServiceTest {
         // arrange
         userService.register(mockRegisterDto)
         val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
-        val groupId = groupService.registerGroup(mockRegisterDto.email, mockDto)
+        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockDto).body!!
 
         // act
         val groupList: List<GroupDetailDto> = userService.findGroupsByUser(mockRegisterDto.email).body!!

@@ -9,6 +9,7 @@ import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.vote.VoteRegisterDto
 import com.duckbox.service.VoteService
 import org.assertj.core.api.Assertions
+import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -65,17 +66,17 @@ class VoteSchedulerTest {
         val startTime = Date(now.time - 1000)
         val finishTime = now
         val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(startTime = startTime, finishTime = finishTime)
-        val id = voteService.registerVote(mockUserEmail, mockDto)
+        val id: String = voteService.registerVote(mockUserEmail, mockDto).body!!
 
         // act & assert: start Ballot
         voteScheduler.voteStatusTask()
-        voteRepository.findById(id).get().apply {
+        voteRepository.findById(ObjectId(id)).get().apply {
             Assertions.assertThat(status).isEqualTo(BallotStatus.OPEN)
         }
 
         // act & assert: close Ballot
         voteScheduler.voteStatusTask()
-        voteRepository.findById(id).get().apply {
+        voteRepository.findById(ObjectId(id)).get().apply {
             Assertions.assertThat(status).isEqualTo(BallotStatus.FINISHED)
         }
     }
@@ -88,13 +89,13 @@ class VoteSchedulerTest {
         val startTime = Date(now.time + 1000000)
         val finishTime = Date(now.time + 100000000)
         val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(startTime = startTime, finishTime = finishTime)
-        val id = voteService.registerVote(mockUserEmail, mockDto)
+        val id: String = voteService.registerVote(mockUserEmail, mockDto).body!!
 
         // act
         voteScheduler.voteStatusTask()
 
         // assert
-        voteRepository.findById(id).get().apply {
+        voteRepository.findById(ObjectId(id)).get().apply {
             Assertions.assertThat(status).isEqualTo(BallotStatus.REGISTERED)
         }
     }
@@ -107,17 +108,17 @@ class VoteSchedulerTest {
         val startTime = Date(now.time - 100)
         val finishTime = Date(now.time + 1000000000)
         val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(startTime = startTime, finishTime = finishTime)
-        val id = voteService.registerVote(mockUserEmail, mockDto)
+        val id: String = voteService.registerVote(mockUserEmail, mockDto).body!!
 
         // act
         voteScheduler.voteStatusTask()
-        voteRepository.findById(id).get().apply {
+        voteRepository.findById(ObjectId(id)).get().apply {
             Assertions.assertThat(status).isEqualTo(BallotStatus.OPEN)
         }
         voteScheduler.voteStatusTask()
 
         // assert: can't close Ballot now
-        voteRepository.findById(id).get().apply {
+        voteRepository.findById(ObjectId(id)).get().apply {
             Assertions.assertThat(status).isEqualTo(BallotStatus.OPEN)
         }
     }

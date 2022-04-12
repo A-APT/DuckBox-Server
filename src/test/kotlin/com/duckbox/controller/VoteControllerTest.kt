@@ -92,7 +92,7 @@ class VoteControllerTest {
 
     fun registerMockGroup(): String {
         val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
-        return groupService.registerGroup(mockUserEmail, mockDto).toString()
+        return groupService.registerGroup(mockUserEmail, mockDto).body!!
     }
 
     @Test
@@ -132,9 +132,9 @@ class VoteControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/vote", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/vote", HttpMethod.POST, httpEntity, String::class.java)
             .apply {
-                assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+                assertThat(statusCode).isEqualTo(HttpStatus.OK)
             }
     }
 
@@ -151,9 +151,9 @@ class VoteControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/vote", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/vote", HttpMethod.POST, httpEntity, String::class.java)
             .apply {
-                assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+                assertThat(statusCode).isEqualTo(HttpStatus.OK)
             }
     }
 

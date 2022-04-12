@@ -9,7 +9,6 @@ import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.RegisterDto
-import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.service.GroupService
 import com.duckbox.service.UserService
@@ -151,9 +150,9 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.POST, httpEntity, String::class.java)
             .apply {
-                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
             }
     }
 
@@ -171,9 +170,9 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.POST, httpEntity, String::class.java)
             .apply {
-                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
             }
     }
 
@@ -226,10 +225,10 @@ class GroupControllerTest {
             this["Authorization"] = "Bearer $token"
         }
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
-        val groupId: ObjectId = groupService.registerGroup(mockUserEmail, mockDto)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
 
         val mockGroupUpdateDto = GroupUpdateDto(
-            id = groupId.toString(),
+            id = groupId,
             description = "changed description",
             profile = "changed profile file!".toByteArray(),
         )

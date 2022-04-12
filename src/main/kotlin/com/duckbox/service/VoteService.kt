@@ -21,7 +21,7 @@ class VoteService (
     private val groupRepository: GroupRepository,
 ) {
 
-    fun registerVote(userEmail: String, voteRegisterDto: VoteRegisterDto): ObjectId {
+    fun registerVote(userEmail: String, voteRegisterDto: VoteRegisterDto): ResponseEntity<String> {
         val owner: String = userRepository.findByEmail(userEmail).nickname
         if (voteRegisterDto.isGroup) { // check groupId is valid
             runCatching {
@@ -60,7 +60,11 @@ class VoteService (
             // notice to voters
         }
 
-        return id
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                id.toString()
+            )
     }
 
     fun getAllVote(): ResponseEntity<List<VoteDetailDto>> {

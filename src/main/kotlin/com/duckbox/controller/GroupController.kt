@@ -21,10 +21,9 @@ class GroupController (
     }
 
     @PostMapping("/api/v1/group")
-    fun register(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupRegisterDto: GroupRegisterDto): ResponseEntity<Unit> {
+    fun register(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupRegisterDto: GroupRegisterDto): ResponseEntity<String> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
-        groupService.registerGroup(userEmail, groupRegisterDto)
-        return ResponseEntity.noContent().build()
+        return groupService.registerGroup(userEmail, groupRegisterDto)
     }
 
     @PostMapping("/api/v1/group/detail")

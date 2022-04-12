@@ -165,9 +165,9 @@ class GroupServiceTest {
         // arrange
         registerMockUser()
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
-        val groupId: ObjectId = groupService.registerGroup(mockUserEmail, mockDto)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
         val mockGroupUpdateDto = GroupUpdateDto(
-            id = groupId.toString(),
+            id = groupId,
             description = "changed description",
             profile = "changed profile file!".toByteArray(),
             header = "changed header file!".toByteArray()
@@ -177,7 +177,7 @@ class GroupServiceTest {
         val updated: GroupEntity = groupService.updateGroup(mockUserEmail, mockGroupUpdateDto)
 
         // assert
-        groupRepository.findById(groupId).get().apply {
+        groupRepository.findById(ObjectId(groupId)).get().apply {
             assertThat(name).isEqualTo(mockGroupRegisterDto.name)
             assertThat(description).isEqualTo(mockGroupUpdateDto.description)
             assertThat(profile).isEqualTo(updated.profile)
@@ -191,9 +191,9 @@ class GroupServiceTest {
         // arrange
         registerMockUser()
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
-        val groupId: ObjectId = groupService.registerGroup(mockUserEmail, mockDto)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
         val mockGroupUpdateDto = GroupUpdateDto(
-            id = groupId.toString(),
+            id = groupId,
             description = "changed description",
             profile = "changed profile file!".toByteArray(),
         )
@@ -202,7 +202,7 @@ class GroupServiceTest {
         val updated: GroupEntity = groupService.updateGroup(mockUserEmail, mockGroupUpdateDto)
 
         // assert
-        groupRepository.findById(groupId).get().apply {
+        groupRepository.findById(ObjectId(groupId)).get().apply {
             assertThat(name).isEqualTo(mockGroupRegisterDto.name)
             assertThat(description).isEqualTo(mockGroupUpdateDto.description)
             assertThat(profile).isEqualTo(updated.profile)
@@ -215,14 +215,14 @@ class GroupServiceTest {
         // arrange
         registerMockUser()
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
-        val groupId: ObjectId = groupService.registerGroup(mockUserEmail, mockDto)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
         val mockGroupUpdateDto1 = GroupUpdateDto(
-            id = groupId.toString(),
+            id = groupId,
             description = "changed description",
             profile = "changed profile file!".toByteArray(),
         )
         val mockGroupUpdateDto2 = GroupUpdateDto(
-            id = groupId.toString(),
+            id = groupId,
             description = null,
             profile = "double-changed profile file!".toByteArray(),
         )
@@ -232,7 +232,7 @@ class GroupServiceTest {
         val updated: GroupEntity = groupService.updateGroup(mockUserEmail, mockGroupUpdateDto2)
 
         // assert
-        groupRepository.findById(groupId).get().apply {
+        groupRepository.findById(ObjectId(groupId)).get().apply {
             assertThat(name).isEqualTo(mockGroupRegisterDto.name)
             assertThat(description).isEqualTo(mockGroupUpdateDto1.description)
             assertThat(profile).isEqualTo(updated.profile)
@@ -265,9 +265,9 @@ class GroupServiceTest {
         // arrange
         registerMockUser()
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
-        val groupId: ObjectId = groupService.registerGroup(mockUserEmail, mockDto)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
         val mockGroupUpdateDto = GroupUpdateDto(
-            id = groupId.toString(),
+            id = groupId,
             description = "changed description"
         )
         val invalidEmail = "not_a_leader@com"

@@ -14,10 +14,9 @@ class VoteController (
 ) {
 
     @PostMapping("/api/v1/vote")
-    fun register(@RequestHeader httpHeaders: Map<String, String>, @RequestBody voteRegisterDto: VoteRegisterDto): ResponseEntity<Unit> {
+    fun register(@RequestHeader httpHeaders: Map<String, String>, @RequestBody voteRegisterDto: VoteRegisterDto): ResponseEntity<String> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
-        voteService.registerVote(userEmail, voteRegisterDto)
-        return ResponseEntity.noContent().build()
+        return voteService.registerVote(userEmail, voteRegisterDto)
     }
 
     @GetMapping("/api/v1/vote")

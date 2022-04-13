@@ -447,4 +447,159 @@ class UserServiceTest {
         }
         assertThat(blindSecp256k1.verify(sig, blindedData.R, message, pubkey)).isEqualTo(true)
     }
+
+    @Test
+    fun is_generateBlindSigVoteToken_works_well_when_group_vote_not_specified_voters() {
+        // arrange
+        userService.register(mockRegisterDto) // create user
+        val mockGroupDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockGroupDto).body!! // create group
+        val mockVoteDto = MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = null)
+        val voteId: String = voteService.registerVote(mockRegisterDto.email, mockVoteDto).body!! // create vote
+        userService.joinGroup(mockRegisterDto.email, groupId) // join group
+
+        val message: ByteArray = "test".encodeToByteArray()
+        val blindedData: BlindedData = blindSecp256k1.blind(R_, message)
+        val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = blindedData.blindM.toString(16))
+
+        // act
+        val blindSigStr: String = userService.generateBlindSigVoteToken(mockRegisterDto.email, blindSigRequestDto).body!!
+        val blindSig: BigInteger = BigInteger(blindSigStr, 16)
+        val sig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, blindSig)
+
+        // assert
+        userBoxRepository.findByEmail(mockRegisterDto.email).apply {
+            assertThat(votes.size).isEqualTo(1)
+            assertThat(votes[0]).isEqualTo(ObjectId(voteId))
+        }
+        assertThat(blindSecp256k1.verify(sig, blindedData.R, message, pubkey)).isEqualTo(true)
+    }
+
+    @Test
+    fun is_generateBlindSigVoteToken_works_well_when_group_vote_specified_voters() {
+        // arrange
+        userService.register(mockRegisterDto) // create user
+        val mockGroupDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockGroupDto).body!! // create group
+        val mockVoteDto = MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = listOf(mockRegisterDto.studentId))
+        val voteId: String = voteService.registerVote(mockRegisterDto.email, mockVoteDto).body!! // create vote
+        // userService.joinGroup(mockRegisterDto.email, groupId) // join group // not required
+
+        val message: ByteArray = "test".encodeToByteArray()
+        val blindedData: BlindedData = blindSecp256k1.blind(R_, message)
+        val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = blindedData.blindM.toString(16))
+
+        // act
+        val blindSigStr: String = userService.generateBlindSigVoteToken(mockRegisterDto.email, blindSigRequestDto).body!!
+        val blindSig: BigInteger = BigInteger(blindSigStr, 16)
+        val sig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, blindSig)
+
+        // assert
+        userBoxRepository.findByEmail(mockRegisterDto.email).apply {
+            assertThat(votes.size).isEqualTo(1)
+            assertThat(votes[0]).isEqualTo(ObjectId(voteId))
+        }
+        assertThat(blindSecp256k1.verify(sig, blindedData.R, message, pubkey)).isEqualTo(true)
+    }
+
+    @Test
+    fun is_generateBlindSigVoteToken_works_invalid_user() {
+        // arrange
+        userService.register(mockRegisterDto) // create user
+        val voteId: String = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto).body!!
+        val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = "")
+
+        // act & assert
+        val invalidEmail = "test@com"
+        runCatching {
+            userService.generateBlindSigVoteToken(invalidEmail, blindSigRequestDto).body!!
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [${invalidEmail}] was not registered.")
+        }
+    }
+
+    @Test
+    fun is_generateBlindSigVoteToken_works_invalid_vote() {
+        // arrange
+        userService.register(mockRegisterDto) // create user
+        val blindSigRequestDto = BlingSigRequestDto(targetId = ObjectId().toString(), blindMessage = "")
+
+        // act & assert
+        runCatching {
+            userService.generateBlindSigVoteToken(mockRegisterDto.email, blindSigRequestDto).body!!
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Invalid VoteId: [${blindSigRequestDto.targetId}]")
+        }
+    }
+
+    @Test
+    fun is_generateBlindSigVoteToken_works_user_already_get_token() {
+        // arrange
+        userService.register(mockRegisterDto) // create user
+        val voteId: String = voteService.registerVote(mockRegisterDto.email, MockDto.mockVoteRegisterDto).body!!
+
+        val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = "12345")
+        userService.generateBlindSigVoteToken(mockRegisterDto.email, blindSigRequestDto) // get token
+
+        // act & assert
+        runCatching {
+            userService.generateBlindSigVoteToken(mockRegisterDto.email, blindSigRequestDto).body!!
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is ConflictException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [${mockRegisterDto.email}] has already participated in the vote [${blindSigRequestDto.targetId}].")
+        }
+    }
+
+    @Test
+    fun is_generateBlindSigVoteToken_works_user_is_not_a_group_member() {
+        // arrange
+        userService.register(mockRegisterDto) // create user
+        val mockGroupDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockGroupDto).body!! // create group
+        val mockVoteDto = MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = null)
+        val voteId: String = voteService.registerVote(mockRegisterDto.email, mockVoteDto).body!! // create vote
+
+        val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = "")
+
+        // act & assert
+        runCatching {
+            userService.generateBlindSigVoteToken(mockRegisterDto.email, blindSigRequestDto).body!!
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is ForbiddenException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [${mockRegisterDto.email}] is ineligible for vote [${blindSigRequestDto.targetId}].")
+        }
+    }
+
+    @Test
+    fun is_generateBlindSigVoteToken_works_user_is_not_in_voters() {
+        // arrange
+        userService.register(mockRegisterDto) // create user
+        val mockGroupDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
+        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockGroupDto).body!! // create group
+        val mockVoteDto = MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = listOf(1, 2))
+        val voteId: String = voteService.registerVote(mockRegisterDto.email, mockVoteDto).body!! // create vote
+
+        val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = "")
+
+        // act & assert
+        runCatching {
+            userService.generateBlindSigVoteToken(mockRegisterDto.email, blindSigRequestDto).body!!
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is ForbiddenException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [${mockRegisterDto.email}] is ineligible for vote [${blindSigRequestDto.targetId}].")
+        }
+    }
+
 }

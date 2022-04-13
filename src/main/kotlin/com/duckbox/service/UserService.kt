@@ -163,27 +163,6 @@ class UserService (
         userBoxRepository.save(userBox)
     }
 
-    fun joinVote(userEmail: String, voteId: String) {
-        val voteObjectId = ObjectId(voteId)
-
-        // Find user
-        lateinit var userBox: UserBox
-        runCatching {
-            userBoxRepository.findByEmail(userEmail)
-        }.onSuccess {
-            userBox = it
-        }.onFailure {
-            throw NotFoundException("User [${userEmail}] was not registered.")
-        }
-
-        // Check voteId is valid
-        if (voteRepository.findById(voteObjectId).isEmpty)
-            throw NotFoundException("Invalid VoteId: [${voteId}]")
-
-        userBox.votes.add(voteObjectId)
-        userBoxRepository.save(userBox)
-    }
-
     fun findGroupsByUser(userEmail: String): ResponseEntity<List<GroupDetailDto>> {
         val groupIdList: MutableList<ObjectId> = userBoxRepository.findByEmail(userEmail).groups
         val groupDtoList: MutableList<GroupDetailDto> = mutableListOf()

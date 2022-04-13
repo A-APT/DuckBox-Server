@@ -1,14 +1,17 @@
 package com.duckbox.service
 
+import BlindSecp256k1
 import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.user.User
 import com.duckbox.domain.user.UserBox
 import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.domain.vote.VoteEntity
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.JWTToken
 import com.duckbox.dto.group.GroupDetailDto
+import com.duckbox.dto.user.BlingSigRequestDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.LoginResponseDto
 import com.duckbox.dto.user.RegisterDto
@@ -19,9 +22,12 @@ import com.duckbox.security.JWTTokenProvider
 import com.duckbox.service.ethereum.DIdService
 import com.duckbox.utils.HashUtils
 import org.bson.types.ObjectId
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.PropertySource
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
+import java.math.BigInteger
 
 @Service
 class UserService (
@@ -32,7 +38,8 @@ class UserService (
     private val jwtTokenProvider: JWTTokenProvider,
     private val hashUtils: HashUtils,
     private val photoService: PhotoService,
-    private val didService: DIdService
+    private val didService: DIdService,
+    private val blindSignatureService: BlindSignatureService,
     ) {
 
     fun generateUserDID(targetEmail: String): String {
@@ -194,4 +201,61 @@ class UserService (
             )
     }
 
+    fun generateBlindSigVoteToken(userEmail: String, blindSigRequestDto: BlingSigRequestDto): ResponseEntity<String> {
+        val voteObjectId = ObjectId(blindSigRequestDto.targetId)
+
+        // Find user
+        lateinit var user: User
+        runCatching {
+            userRepository.findByEmail(userEmail)
+        }.onSuccess {
+            user = it
+        }.onFailure {
+            throw NotFoundException("User [${userEmail}] was not registered.")
+        }
+        val userBox: UserBox = userBoxRepository.findByEmail(userEmail)
+
+        // Find vote entity
+        lateinit var vote: VoteEntity
+        runCatching {
+            voteRepository.findById(voteObjectId).get()
+        }.onSuccess {
+            vote = it
+        }.onFailure {
+            throw NotFoundException("Invalid VoteId: [${blindSigRequestDto.targetId}]")
+        }
+
+        // check whether user already received vote token (signature)
+        if (userBox.votes.find { it == voteObjectId } != null) {
+            throw ConflictException("User [$userEmail] has already participated in the vote [${blindSigRequestDto.targetId}].")
+        }
+
+        // check user is eligible
+        if (vote.isGroup) {
+            if (vote.voters == null) {
+                // all group member have right to vote
+                if (userBox.groups.find { it == ObjectId(vote.groupId) } == null) {
+                    // but ineligible when user is not a group member
+                    throw ForbiddenException("User [$userEmail] is ineligible for vote [${blindSigRequestDto.targetId}].")
+                }
+            } else if (vote.voters?.find { it == user.studentId } == null) {
+                // only vote.voters have right to vote
+                throw ForbiddenException("User [$userEmail] is ineligible for vote [${blindSigRequestDto.targetId}].")
+            }
+        } // else, all user have right to vote (== community)
+
+        // generate blind signature
+        val blindMessage: BigInteger = BigInteger(blindSigRequestDto.blindMessage, 16)
+        val blindSig: BigInteger = blindSignatureService.blindSig(blindMessage)
+
+        // update user's voting record
+        userBox.votes.add(voteObjectId)
+        userBoxRepository.save(userBox)
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                blindSig.toString(16) // in base16
+            )
+    }
 }

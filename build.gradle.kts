@@ -143,7 +143,7 @@ dependencies {
     implementation("io.springfox:springfox-swagger-ui:2.9.2")
 
     // BlindSignature by AAPT
-    implementation("com.github.A-APT:BlindSignature:1.0.0")
+    implementation("com.github.A-APT:BlindSignature:2.0.0")
 }
 
 tasks.test {

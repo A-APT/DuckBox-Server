@@ -140,7 +140,9 @@ class UserServiceTest {
         assertThat(user.email).isEqualTo(loginRequestDto.email)
         assertThat(user.password).isEqualTo(loginRequestDto.password)
         assertThat(loginResponseDto).isNotEqualTo(null)
-        loginResponseDto?.apply {
+        assertThat(loginResponseDto!!.did).isEqualTo(user.did)
+        assertThat(loginResponseDto.studentId).isEqualTo(user.studentId)
+        loginResponseDto.apply {
             assertThat(jwtTokenProvider.verifyToken(token)).isEqualTo(true)
             assertThat(jwtTokenProvider.getUserPK(token)).isEqualTo(loginRequestDto.email)
         }

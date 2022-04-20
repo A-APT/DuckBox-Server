@@ -110,6 +110,7 @@ class VoteServiceTest {
             assertThat(images.size).isEqualTo(0)
             assertThat(groupId).isEqualTo(null)
             assertThat(voters).isEqualTo(null)
+            assertThat(voteNum).isEqualTo(0)
             assertThat(owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
             assertThat(status).isEqualTo(BallotStatus.REGISTERED)
         }
@@ -130,6 +131,7 @@ class VoteServiceTest {
             assertThat(images.size).isEqualTo(0)
             assertThat(groupId).isEqualTo(groupId)
             assertThat(voters).isNotEqualTo(null)
+            assertThat(voteNum).isEqualTo(0)
             assertThat(owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
         }
     }
@@ -269,6 +271,7 @@ class VoteServiceTest {
         }
         assertThat(blindSecp256k1.verify(serverSig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
         assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.voteOwnerPublic)).isEqualTo(true)
+        assertThat(voteRepository.findById(ObjectId(voteId)).get().voteNum).isEqualTo(1)
     }
 
     @Test

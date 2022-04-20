@@ -25,6 +25,7 @@ class VoteEntity (
     var images: List<ObjectId>, // image list
     var candidates: List<String>,
     var voters: List<Int>?, // student id. null if isGroup is false or all group member have right to vote
+    var voteNum: Int, // count the number of people who voted
     var reward: Boolean
 ) {
 

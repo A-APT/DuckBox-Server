@@ -62,6 +62,7 @@ class VoteService (
                 images = idOfImages.toList(),
                 candidates = voteRegisterDto.candidates,
                 voters = voteRegisterDto.voters,
+                voteNum = 0,
                 reward = voteRegisterDto.reward
             )
         ).id
@@ -164,6 +165,10 @@ class VoteService (
         // update user's voting record
         userBox.votes.add(voteObjectId)
         userBoxRepository.save(userBox)
+
+        // update vote's voteNum record
+        vote.voteNum++
+        voteRepository.save(vote)
 
         return ResponseEntity
             .status(HttpStatus.OK)

@@ -34,6 +34,7 @@ object MockDto {
         startTime = Date(),
         finishTime = Date(),
         images = listOf(),
+        ownerPrivate = DefinedValue.voteOwnerPrivate,
         candidates = listOf("a", "b"),
         voters = listOf(1, 2),
         reward = false,

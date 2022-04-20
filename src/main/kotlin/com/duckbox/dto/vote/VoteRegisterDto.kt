@@ -10,6 +10,7 @@ data class VoteRegisterDto (
     val startTime: Date,
     val finishTime: Date,
     var images: List<ByteArray>, // image list
+    var ownerPrivate: String, // private key in radix 16
     val candidates: List<String>,
     val voters: List<Int>?, // student id. null if isGroup is false or all group member have right to vote
     val reward: Boolean,

@@ -54,6 +54,7 @@ class VoteService (
                 isGroup = voteRegisterDto.isGroup,
                 groupId = voteRegisterDto.groupId,
                 owner = owner,
+                ownerPrivate = BigInteger(voteRegisterDto.ownerPrivate, 16),
                 startTime = voteRegisterDto.startTime,
                 finishTime = voteRegisterDto.finishTime,
                 status = BallotStatus.REGISTERED,

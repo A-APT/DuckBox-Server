@@ -4,6 +4,7 @@ import com.duckbox.dto.vote.VoteDetailDto
 import org.bson.types.Binary
 import org.bson.types.ObjectId
 import org.springframework.data.mongodb.core.mapping.Document
+import java.math.BigInteger
 import java.util.*
 import javax.persistence.Id
 
@@ -17,6 +18,7 @@ class VoteEntity (
     var isGroup: Boolean,
     var groupId: String?, // groupId(ObjectId) if isGroup is true
     var owner: String, // owner's nickname
+    var ownerPrivate: BigInteger, // private key
     var startTime: Date,
     var finishTime: Date,
     var status: BallotStatus,

@@ -15,6 +15,7 @@ import com.duckbox.dto.user.BlingSigRequestDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
+import com.duckbox.dto.vote.VoteToken
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
@@ -255,16 +256,19 @@ class VoteServiceTest {
         val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = blindedData.blindM.toString(16))
 
         // act
-        val blindSigStr: String = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
-        val blindSig: BigInteger = BigInteger(blindSigStr, 16)
-        val sig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, blindSig)
+        val voteToken: VoteToken = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
+        val serverToken: BigInteger = BigInteger(voteToken.serverToken, 16)
+        val voteOwnerToken: BigInteger = BigInteger(voteToken.voteOwnerToken, 16)
+        val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverToken)
+        val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, voteOwnerToken)
 
         // assert
         userBoxRepository.findByEmail(mockUserEmail).apply {
             assertThat(votes.size).isEqualTo(1)
             assertThat(votes[0]).isEqualTo(ObjectId(voteId))
         }
-        assertThat(blindSecp256k1.verify(sig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
+        assertThat(blindSecp256k1.verify(serverSig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
+        assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.voteOwnerPublic)).isEqualTo(true)
     }
 
     @Test
@@ -282,16 +286,19 @@ class VoteServiceTest {
         val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = blindedData.blindM.toString(16))
 
         // act
-        val blindSigStr: String = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
-        val blindSig: BigInteger = BigInteger(blindSigStr, 16)
-        val sig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, blindSig)
+        val voteToken: VoteToken = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
+        val serverToken: BigInteger = BigInteger(voteToken.serverToken, 16)
+        val voteOwnerToken: BigInteger = BigInteger(voteToken.voteOwnerToken, 16)
+        val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverToken)
+        val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, voteOwnerToken)
 
         // assert
         userBoxRepository.findByEmail(mockUserEmail).apply {
             assertThat(votes.size).isEqualTo(1)
             assertThat(votes[0]).isEqualTo(ObjectId(voteId))
         }
-        assertThat(blindSecp256k1.verify(sig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
+        assertThat(blindSecp256k1.verify(serverSig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
+        assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.voteOwnerPublic)).isEqualTo(true)
     }
 
     @Test
@@ -309,16 +316,19 @@ class VoteServiceTest {
         val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = blindedData.blindM.toString(16))
 
         // act
-        val blindSigStr: String = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
-        val blindSig: BigInteger = BigInteger(blindSigStr, 16)
-        val sig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, blindSig)
+        val voteToken: VoteToken = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
+        val serverToken: BigInteger = BigInteger(voteToken.serverToken, 16)
+        val voteOwnerToken: BigInteger = BigInteger(voteToken.voteOwnerToken, 16)
+        val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverToken)
+        val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, voteOwnerToken)
 
         // assert
         userBoxRepository.findByEmail(mockUserEmail).apply {
             assertThat(votes.size).isEqualTo(1)
             assertThat(votes[0]).isEqualTo(ObjectId(voteId))
         }
-        assertThat(blindSecp256k1.verify(sig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
+        assertThat(blindSecp256k1.verify(serverSig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
+        assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.voteOwnerPublic)).isEqualTo(true)
     }
 
     @Test

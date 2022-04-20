@@ -11,6 +11,7 @@ import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.user.BlingSigRequestDto
 import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
+import com.duckbox.dto.vote.VoteToken
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
@@ -112,7 +113,7 @@ class VoteService (
             )
     }
 
-    fun generateBlindSigVoteToken(userEmail: String, blindSigRequestDto: BlingSigRequestDto): ResponseEntity<String> {
+    fun generateBlindSigVoteToken(userEmail: String, blindSigRequestDto: BlingSigRequestDto): ResponseEntity<VoteToken> {
         val voteObjectId = ObjectId(blindSigRequestDto.targetId)
 
         // Find user
@@ -155,9 +156,10 @@ class VoteService (
             }
         } // else, all user have right to vote (== community)
 
-        // generate blind signature
+        // generate 2 blind signatures: sign with Server's key and VoteOwner's key
         val blindMessage: BigInteger = BigInteger(blindSigRequestDto.blindMessage, 16)
-        val blindSig: BigInteger = blindSignatureService.blindSig(blindMessage)
+        val blindSigOfServer: BigInteger = blindSignatureService.blindSig(blindMessage)
+        val blindSigOfVoteOwner: BigInteger = blindSignatureService.blindSig(vote.ownerPrivate, blindMessage)
 
         // update user's voting record
         userBox.votes.add(voteObjectId)
@@ -166,7 +168,10 @@ class VoteService (
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(
-                blindSig.toString(16) // in base16
+                VoteToken( // in radix 16
+                    serverToken = blindSigOfServer.toString(16),
+                    voteOwnerToken = blindSigOfVoteOwner.toString(16)
+                )
             )
     }
 }

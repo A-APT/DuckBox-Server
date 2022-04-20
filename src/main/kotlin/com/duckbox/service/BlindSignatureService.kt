@@ -22,4 +22,8 @@ class BlindSignatureService (private val blindSecp256k1: BlindSecp256k1){
         return blindSecp256k1.blindSign(privateKey, k, blindMessage)
     }
 
+    fun blindSig(blindMessage: BigInteger, privateKey: BigInteger): BigInteger {
+        val k: BigInteger = BigInteger(kValue, 16)
+        return blindSecp256k1.blindSign(privateKey, k, blindMessage)
+    }
 }

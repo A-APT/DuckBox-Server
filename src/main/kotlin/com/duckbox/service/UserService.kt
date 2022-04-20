@@ -34,12 +34,10 @@ class UserService (
     private val userRepository: UserRepository,
     private val userBoxRepository: UserBoxRepository,
     private val groupRepository: GroupRepository,
-    private val voteRepository: VoteRepository,
     private val jwtTokenProvider: JWTTokenProvider,
     private val hashUtils: HashUtils,
     private val photoService: PhotoService,
     private val didService: DIdService,
-    private val blindSignatureService: BlindSignatureService,
     ) {
 
     fun generateUserDID(targetEmail: String): String {
@@ -182,64 +180,6 @@ class UserService (
             .status(HttpStatus.OK)
             .body(
                 groupDtoList
-            )
-    }
-
-    fun generateBlindSigVoteToken(userEmail: String, blindSigRequestDto: BlingSigRequestDto): ResponseEntity<String> {
-        val voteObjectId = ObjectId(blindSigRequestDto.targetId)
-
-        // Find user
-        lateinit var user: User
-        runCatching {
-            userRepository.findByEmail(userEmail)
-        }.onSuccess {
-            user = it
-        }.onFailure {
-            throw NotFoundException("User [${userEmail}] was not registered.")
-        }
-        val userBox: UserBox = userBoxRepository.findByEmail(userEmail)
-
-        // Find vote entity
-        lateinit var vote: VoteEntity
-        runCatching {
-            voteRepository.findById(voteObjectId).get()
-        }.onSuccess {
-            vote = it
-        }.onFailure {
-            throw NotFoundException("Invalid VoteId: [${blindSigRequestDto.targetId}]")
-        }
-
-        // check whether user already received vote token (signature)
-        if (userBox.votes.find { it == voteObjectId } != null) {
-            throw ConflictException("User [$userEmail] has already participated in the vote [${blindSigRequestDto.targetId}].")
-        }
-
-        // check user is eligible
-        if (vote.isGroup) {
-            if (vote.voters == null) {
-                // all group member have right to vote
-                if (userBox.groups.find { it == ObjectId(vote.groupId) } == null) {
-                    // but ineligible when user is not a group member
-                    throw ForbiddenException("User [$userEmail] is ineligible for vote [${blindSigRequestDto.targetId}].")
-                }
-            } else if (vote.voters?.find { it == user.studentId } == null) {
-                // only vote.voters have right to vote
-                throw ForbiddenException("User [$userEmail] is ineligible for vote [${blindSigRequestDto.targetId}].")
-            }
-        } // else, all user have right to vote (== community)
-
-        // generate blind signature
-        val blindMessage: BigInteger = BigInteger(blindSigRequestDto.blindMessage, 16)
-        val blindSig: BigInteger = blindSignatureService.blindSig(blindMessage)
-
-        // update user's voting record
-        userBox.votes.add(voteObjectId)
-        userBoxRepository.save(userBox)
-
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(
-                blindSig.toString(16) // in base16
             )
     }
 }

@@ -37,12 +37,6 @@ class UserController(
         return ResponseEntity.noContent().build()
     }
 
-    @PostMapping("/api/v1/user/vote")
-    fun joinVote(@RequestHeader httpHeaders: Map<String, String>, @RequestBody blindSigRequestDto: BlingSigRequestDto): ResponseEntity<String> {
-        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
-        return userService.generateBlindSigVoteToken(userEmail, blindSigRequestDto)
-    }
-
     @GetMapping("/api/v1/user/group")
     fun getGroupsByUser(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<List<GroupDetailDto>> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)

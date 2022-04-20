@@ -15,6 +15,7 @@ data class VoteDetailDto (
     var status: BallotStatus,
     var images: List<ByteArray>, // image list
     var candidates: List<String>,
+    val voters: List<Int>?, // student id. null if isGroup is false or all group member have right to vote
     var reward: Boolean,
 )
 

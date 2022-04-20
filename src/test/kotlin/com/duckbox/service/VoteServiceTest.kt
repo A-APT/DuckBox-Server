@@ -216,6 +216,7 @@ class VoteServiceTest {
         assertThat(voteList[0].id).isEqualTo(voteId)
         assertThat(voteList[0].images[0]).isEqualTo(binaryFile)
         assertThat(voteList[0].owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
+        assertThat(voteList[0].voters!!.size).isEqualTo(mockVoteRegisterDto.voters!!.size)
     }
 
     @Test

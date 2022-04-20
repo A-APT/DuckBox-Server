@@ -29,7 +29,7 @@ class VoteEntity (
     fun toVoteDetailDto(_images: List<ByteArray>): VoteDetailDto {
         return VoteDetailDto(
             id = id.toString(), // change ObjectId to String
-            title, content, isGroup, groupId, owner, startTime, finishTime, status, _images, candidates, reward
+            title, content, isGroup, groupId, owner, startTime, finishTime, status, _images, candidates, voters, reward
         )
     }
 }

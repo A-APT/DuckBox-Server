@@ -1,6 +1,7 @@
 package com.duckbox.service.ethereum
 
 import com.duckbox.errors.exception.EthereumException
+import com.duckbox.utils.HashUtils
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,13 +20,17 @@ class DidServiceTest {
     @Value("\${contract.owner}")
     private lateinit var ownerAddress: String
 
+    @Autowired
+    private lateinit var hashUtils: HashUtils
+
     private val did = "did.test2"
 
     //@Test
     fun is_didService_works_well() {
-        didService.registerDid(address = ownerAddress, did = did)
+        val hash: String = hashUtils.SHA256(did)
+        didService.registerDid(address = ownerAddress, did = hash)
         runCatching {
-            didService.registerDid(address = ownerAddress, did = did)
+            didService.registerDid(address = ownerAddress, did = hash)
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {

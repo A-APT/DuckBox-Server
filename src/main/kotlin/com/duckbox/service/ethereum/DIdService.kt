@@ -7,6 +7,8 @@ import org.web3j.abi.datatypes.Address
 import org.web3j.abi.datatypes.Bool
 import org.web3j.abi.datatypes.Type
 import org.web3j.abi.datatypes.Utf8String
+import org.web3j.abi.datatypes.generated.Bytes32
+import javax.xml.bind.DatatypeConverter
 
 @Service
 class DIdService(private val ethereumService: EthereumService) {
@@ -18,8 +20,8 @@ class DIdService(private val ethereumService: EthereumService) {
     private final val UNREGISTER = "removeId"
 
     fun registerDid(address: String, did: String): Boolean? {
-        val inputParams = listOf<Type<*>>(Address(address), Utf8String(did))
-        val outputParams = listOf<TypeReference<*>>(object: TypeReference<Bool>() {})
+        val inputParams = listOf<Type<*>>(Address(address), Bytes32(DatatypeConverter.parseHexBinary(did)))
+        val outputParams = listOf<TypeReference<*>>()
         return ethereumService.ethSendRaw(contractAddress, REGISTER, inputParams, outputParams) as Boolean?
     }
 

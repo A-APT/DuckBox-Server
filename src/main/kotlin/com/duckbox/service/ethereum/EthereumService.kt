@@ -34,7 +34,7 @@ class EthereumService(private val web3j: Web3j) {
     private lateinit var ownerPrivate: String
 
     val gasPrice: BigInteger = web3j.ethGasPrice().sendAsync().get().gasPrice
-    val gasLimit: BigInteger = BigInteger.valueOf(80000) // gasLimit (ropsten)
+    val gasLimit: BigInteger = BigInteger.valueOf(800000) // gasLimit (ropsten)
 
     fun ethCall(contractAddress: String, functionName: String, inputParams: List<Type<*>>, outputParams: List<TypeReference<*>>): Any? {
         // generate function
@@ -90,6 +90,7 @@ class EthereumService(private val web3j: Web3j) {
             encodedFunction, // data
             BigInteger.ZERO // value
         )
+
 
         if (ethSend.hasError()){
             throw EthereumException(ethSend.error.message)

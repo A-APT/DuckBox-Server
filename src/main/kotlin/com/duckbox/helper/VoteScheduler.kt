@@ -3,6 +3,7 @@ package com.duckbox.helper
 import com.duckbox.domain.vote.BallotStatus
 import com.duckbox.domain.vote.VoteEntity
 import com.duckbox.domain.vote.VoteRepository
+import com.duckbox.service.ethereum.BallotService
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.util.*
@@ -10,6 +11,7 @@ import java.util.*
 @Component
 class VoteScheduler (
     private val voteRepository: VoteRepository,
+    private val ballotService: BallotService,
 ){
 
     @Scheduled(cron = "0 5 * * * ?")
@@ -23,7 +25,9 @@ class VoteScheduler (
             if (it.finishTime <= now) {
                 it.status = BallotStatus.FINISHED
                 voteRepository.save(it)
-                // TODO to ethereum
+
+                // to ethereum
+                ballotService.close(it.id.toString(), it.voteNum)
             }
         }
 
@@ -33,7 +37,9 @@ class VoteScheduler (
             if (it.startTime <= now) {
                 it.status = BallotStatus.OPEN
                 voteRepository.save(it)
-                // TODO to ethereum
+
+                // to ethereum
+                ballotService.open(it.id.toString())
             }
         }
     }

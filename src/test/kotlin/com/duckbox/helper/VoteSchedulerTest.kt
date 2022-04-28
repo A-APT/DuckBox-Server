@@ -8,6 +8,9 @@ import com.duckbox.domain.vote.BallotStatus
 import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.vote.VoteRegisterDto
 import com.duckbox.service.VoteService
+import com.duckbox.service.ethereum.BallotService
+import io.mockk.mockk
+import io.mockk.mockkConstructor
 import org.assertj.core.api.Assertions
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
@@ -26,6 +29,8 @@ class VoteSchedulerTest {
 
     @Autowired
     private lateinit var voteScheduler: VoteScheduler
+
+    private lateinit var mockBallotService: BallotService
 
     @Autowired
     private lateinit var voteRepository: VoteRepository
@@ -48,6 +53,9 @@ class VoteSchedulerTest {
         voteRepository.deleteAll()
         userRepository.deleteAll()
         photoRepository.deleteAll()
+        mockkConstructor(BallotService::class)
+        mockBallotService = mockk(relaxed = true)
+        setBallotService(mockBallotService)
     }
 
     fun registerMockUser() {
@@ -56,6 +64,14 @@ class VoteSchedulerTest {
             phoneNumber = "", nickname = "", college = "", department = listOf(),
             roles = setOf("ROLE_USER")
         ))
+    }
+
+    // Set ballotService
+    private fun setBallotService(ballotService: BallotService) {
+        VoteScheduler::class.java.getDeclaredField("ballotService").apply {
+            isAccessible = true
+            set(voteScheduler, ballotService)
+        }
     }
 
     @Test

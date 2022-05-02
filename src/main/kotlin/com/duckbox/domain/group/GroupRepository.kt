@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository
 interface GroupRepository: MongoRepository<GroupEntity, ObjectId> {
     fun findByName(name: String): GroupEntity
     fun findByStatus(status: GroupStatus): GroupEntity
+    fun findByNameContains(query: String): MutableList<GroupEntity>
 }

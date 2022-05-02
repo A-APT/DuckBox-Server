@@ -295,4 +295,29 @@ class GroupServiceTest {
             assertThat(it.message).isEqualTo("User [$invalidEmail] and DID were not matched.")
         }
     }
+
+    @Test
+    fun is_searchGroup_works_well() {
+        // arrange
+        registerMockUser()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val mockProfile: ByteArray = "profile file!".toByteArray()
+        val mockHeader: ByteArray = "header file!".toByteArray()
+        groupService.registerGroup(mockUserEmail, mockDto.copy(name = "hello duckbox", profile = mockProfile))
+        groupService.registerGroup(mockUserEmail, mockDto.copy(name = "my first grouppp...", header = mockHeader))
+        groupService.registerGroup(mockUserEmail, mockDto.copy(name = "this is my group!", header = mockHeader))
+
+        // act
+        val groupList1: List<GroupDetailDto> = groupService.searchGroup("woooo").body!!
+        val groupList2: List<GroupDetailDto> = groupService.searchGroup("duckbox").body!!
+        val groupList3: List<GroupDetailDto> = groupService.searchGroup("group").body!!
+
+        // assert
+        assertThat(groupList1.size).isEqualTo(0)
+        assertThat(groupList2.size).isEqualTo(1)
+        assertThat(groupList3.size).isEqualTo(2)
+
+        assertThat(groupList2[0].profile).isEqualTo(mockProfile)
+        assertThat(groupList3[0].header).isEqualTo(mockHeader)
+    }
 }

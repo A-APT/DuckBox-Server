@@ -85,7 +85,7 @@ class GroupControllerTest {
     fun is_getGroups_works_no_headers_token() {
         // act, assert
         restTemplate
-            .getForEntity("${baseAddress}/api/v1/group", Unit::class.java)
+            .getForEntity("${baseAddress}/api/v1/group/all", Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
@@ -104,7 +104,7 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
+            .exchange("${baseAddress}/api/v1/group/all", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
                 Assertions.assertThat(body!!.size).isEqualTo(1)
@@ -263,4 +263,38 @@ class GroupControllerTest {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
             }
     }
+
+    @Test
+    fun is_searchGroup_works_no_headers_token() {
+        // act, assert
+        restTemplate
+            .getForEntity("${baseAddress}/api/v1/group", Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_searchGroup_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        groupService.registerGroup(mockUserEmail, mockDto.copy(name = "hello duckbox"))
+        groupService.registerGroup(mockUserEmail, mockDto.copy(name = "my first grouppp..."))
+        groupService.registerGroup(mockUserEmail, mockDto.copy(name = "this is my group!"))
+        val httpEntity = HttpEntity(null, httpHeaders)
+        val query: String = "group"
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/$query", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
+                Assertions.assertThat(body!!.size).isEqualTo(2)
+            }
+    }
+
 }

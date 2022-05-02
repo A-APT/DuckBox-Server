@@ -101,4 +101,18 @@ class GroupService (
         // update to server
         return groupRepository.save(groupEntity)
     }
+
+    fun searchGroup(query: String): ResponseEntity<List<GroupDetailDto>> {
+        val groupDtoList: MutableList<GroupDetailDto> = mutableListOf()
+        groupRepository.findByNameContains(query).forEach {
+            val profile: ByteArray? = if(it.profile != null) photoService.getPhoto(it.profile!!).data else null
+            val header: ByteArray? = if(it.header != null) photoService.getPhoto(it.header!!).data else null
+            groupDtoList.add(it.toGroupDetailDto(profile, header))
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                groupDtoList
+            )
+    }
 }

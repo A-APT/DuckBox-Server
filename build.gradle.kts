@@ -72,7 +72,8 @@ tasks.jacocoTestCoverageVerification {
                 "com.duckbox.security.JWTTokenProvider**", //
                 "com.duckbox.service.ethereum.**", //
                 "com.duckbox.service.SMSService**",
-                "com.duckbox.helper.EthereumListener**"
+                "com.duckbox.helper.EthereumListener**",
+                "com.duckbox.service.FCMService**"
             )
         }
     }
@@ -144,6 +145,9 @@ dependencies {
 
     // BlindSignature by AAPT
     implementation("com.github.A-APT:BlindSignature:2.0.0")
+
+    // firebase
+    implementation("com.google.firebase:firebase-admin:8.1.0")
 }
 
 tasks.test {

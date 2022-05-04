@@ -18,6 +18,7 @@ class SecurityConfig(private val jwtTokenProvider: JWTTokenProvider): WebSecurit
                 .authorizeRequests()
                 .antMatchers("/api/v1/group/**",
                                         "/api/v1/vote/**",
+                                        "/api/v1/survey/**",
                                         "/api/v1/user/group/**",
                                         "/api/v1/user/vote/**").hasRole("USER")
                 .antMatchers("/**").permitAll()

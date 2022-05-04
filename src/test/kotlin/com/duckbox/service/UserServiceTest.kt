@@ -214,59 +214,6 @@ class UserServiceTest {
     }
 
     @Test
-    fun is_joinGroup_works_well() {
-        // arrange
-        userService.register(mockRegisterDto)
-        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
-        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockDto).body!!
-
-        // act
-        userService.joinGroup(mockRegisterDto.email, groupId)
-
-        // assert
-        userBoxRepository.findByEmail(mockRegisterDto.email).apply {
-            assertThat(groups.size).isEqualTo(1)
-            assertThat(groups[0]).isEqualTo(ObjectId(groupId))
-        }
-    }
-
-    @Test
-    fun is_joinGroup_works_on_invalid_user() {
-        // arrange
-        userService.register(mockRegisterDto)
-        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
-        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockDto).body!!
-
-        // act & assert
-        val invalidEmail = "test@com"
-        runCatching {
-            userService.joinGroup(invalidEmail, groupId)
-        }.onSuccess {
-            fail("This should be failed.")
-        }.onFailure {
-            assertThat(it is NotFoundException).isEqualTo(true)
-            assertThat(it.message).isEqualTo("User [${invalidEmail}] was not registered.")
-        }
-    }
-
-    @Test
-    fun is_joinGroup_works_on_invalid_groupId() {
-        // arrange
-        userService.register(mockRegisterDto)
-        val invalidGroupId: String = ObjectId().toString()
-
-        // act & assert
-        runCatching {
-            userService.joinGroup(mockRegisterDto.email, invalidGroupId)
-        }.onSuccess {
-            fail("This should be failed.")
-        }.onFailure {
-            assertThat(it is NotFoundException).isEqualTo(true)
-            assertThat(it.message).isEqualTo("Invalid GroupId: [${invalidGroupId}]")
-        }
-    }
-
-    @Test
     fun is_checkValidUser_works_well() {
         // arrange
         userService.register(mockRegisterDto)
@@ -316,39 +263,6 @@ class UserServiceTest {
             assertThat(it is NotFoundException).isEqualTo(true)
             assertThat(it.message).isEqualTo("User [${invalidEmail}] was not registered.")
         }
-    }
-
-    @Test
-    fun is_findGroupsByUser_works_well() {
-        // arrange
-        userService.register(mockRegisterDto)
-        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
-        mockDto.profile = "profile file!".toByteArray()
-        mockDto.header = "header file!".toByteArray()
-        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockDto).body!!
-        userService.joinGroup(mockRegisterDto.email, groupId)
-
-        // act
-        val groupList: List<GroupDetailDto> = userService.findGroupsByUser(mockRegisterDto.email).body!!
-
-        // assert
-        assertThat(groupList.size).isEqualTo(1)
-        assertThat(groupList[0].profile).isEqualTo(mockDto.profile)
-        assertThat(groupList[0].header).isEqualTo(mockDto.header)
-    }
-
-    @Test
-    fun is_findGroupsByUser_works_well_when_empty_joined_group() {
-        // arrange
-        userService.register(mockRegisterDto)
-        val mockDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockRegisterDto.email).did)
-        val groupId: String = groupService.registerGroup(mockRegisterDto.email, mockDto).body!!
-
-        // act
-        val groupList: List<GroupDetailDto> = userService.findGroupsByUser(mockRegisterDto.email).body!!
-
-        // assert
-        assertThat(groupList.size).isEqualTo(0)
     }
 
 }

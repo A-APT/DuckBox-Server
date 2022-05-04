@@ -3,6 +3,7 @@ package com.duckbox.controller
 import com.duckbox.MockDto
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.photo.PhotoRepository
+import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
@@ -42,6 +43,9 @@ class GroupControllerTest {
     private lateinit var userRepository: UserRepository
 
     @Autowired
+    private lateinit var userBoxRepository: UserBoxRepository
+
+    @Autowired
     private lateinit var groupService: GroupService
 
     @Autowired
@@ -62,6 +66,7 @@ class GroupControllerTest {
         groupRepository.deleteAll()
         photoRepository.deleteAll()
         userRepository.deleteAll()
+        userBoxRepository.deleteAll()
     }
 
     fun registerAndLogin(): String {
@@ -264,6 +269,76 @@ class GroupControllerTest {
             }
     }
 
+
+    @Test
+    fun is_joinGroup_works_no_authToken_header() {
+        // arrange
+        val httpEntity = HttpEntity(ObjectId().toString(), HttpHeaders())
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_joinGroup_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        val httpEntity = HttpEntity(groupId, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+                println(this.body)
+            }
+    }
+
+    @Test
+    fun is_joinGroup_works_on_invalid_user() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer invalid_token"
+        }
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId = groupService.registerGroup(mockUserEmail, mockDto)
+        val httpEntity = HttpEntity(groupId.toString(), httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_joinGroup_works_on_invalid_groupId() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val httpEntity = HttpEntity(ObjectId().toString(), httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/register", HttpMethod.POST, httpEntity, NotFoundException::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
     @Test
     fun is_searchGroup_works_no_headers_token() {
         // act, assert
@@ -297,4 +372,25 @@ class GroupControllerTest {
             }
     }
 
+    @Test
+    fun is_findGroupsByUser_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        groupService.joinGroup(mockUserEmail, groupId)
+
+        val httpEntity = HttpEntity(null, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/my", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
+                Assertions.assertThat(body!!.size).isEqualTo(1)
+            }
+    }
 }

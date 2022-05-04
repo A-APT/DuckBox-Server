@@ -20,6 +20,12 @@ class GroupController (
         return groupService.getGroups()
     }
 
+    @GetMapping("/api/v1/group/my")
+    fun getGroupsOfUser(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<List<GroupDetailDto>> {
+        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
+        return groupService.findGroupsOfUser(userEmail)
+    }
+
     @GetMapping("/api/v1/group/{query}")
     fun searchGroup(@RequestHeader httpHeaders: Map<String, String>, @PathVariable query: String): ResponseEntity<List<GroupDetailDto>> {
         return groupService.searchGroup(query)
@@ -35,6 +41,13 @@ class GroupController (
     fun updateGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupUpdateDto: GroupUpdateDto): ResponseEntity<Unit> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
         groupService.updateGroup(userEmail, groupUpdateDto)
+        return ResponseEntity.noContent().build()
+    }
+
+    @PostMapping("/api/v1/group/register")
+    fun joinGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupId: String): ResponseEntity<Unit> {
+        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
+        groupService.joinGroup(userEmail, groupId)
         return ResponseEntity.noContent().build()
     }
 }

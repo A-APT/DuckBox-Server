@@ -144,42 +144,4 @@ class UserService (
                 JWTToken(token = jwtToken.token, refreshToken = jwtToken.refreshToken)
             )
     }
-
-    fun joinGroup(userEmail: String, groupId: String) {
-        val groupObjectId = ObjectId(groupId)
-
-        // Find user
-        lateinit var userBox: UserBox
-        runCatching {
-            userBoxRepository.findByEmail(userEmail)
-        }.onSuccess {
-            userBox = it
-        }.onFailure {
-            throw NotFoundException("User [${userEmail}] was not registered.")
-        }
-
-        // Check voteId is valid
-        if (groupRepository.findById(groupObjectId).isEmpty)
-            throw NotFoundException("Invalid GroupId: [${groupId}]")
-
-        userBox.groups.add(groupObjectId)
-        userBoxRepository.save(userBox)
-    }
-
-    fun findGroupsByUser(userEmail: String): ResponseEntity<List<GroupDetailDto>> {
-        val groupIdList: MutableList<ObjectId> = userBoxRepository.findByEmail(userEmail).groups
-        val groupDtoList: MutableList<GroupDetailDto> = mutableListOf()
-        groupIdList.forEach {
-            val groupEntity: GroupEntity = groupRepository.findById(it).get()
-            val profile: ByteArray? = if(groupEntity.profile != null) photoService.getPhoto(groupEntity.profile!!).data else null
-            val header: ByteArray? = if(groupEntity.header != null) photoService.getPhoto(groupEntity.header!!).data else null
-            groupDtoList.add(groupEntity.toGroupDetailDto(profile, header))
-
-        }
-        return ResponseEntity
-            .status(HttpStatus.OK)
-            .body(
-                groupDtoList
-            )
-    }
 }

@@ -282,7 +282,7 @@ class VoteServiceTest {
         val groupId: String = groupService.registerGroup(mockUserEmail, mockGroupDto).body!! // create group
         val mockVoteDto = MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = null)
         val voteId: String = voteService.registerVote(mockUserEmail, mockVoteDto).body!! // create vote
-        userService.joinGroup(mockUserEmail, groupId) // join group
+        groupService.joinGroup(mockUserEmail, groupId) // join group
 
         val message: ByteArray = "test".encodeToByteArray()
         val blindedData: BlindedData = blindSecp256k1.blind(DefinedValue.R_, message)

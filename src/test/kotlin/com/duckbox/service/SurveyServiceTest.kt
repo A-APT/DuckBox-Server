@@ -9,8 +9,11 @@ import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.BallotStatus
 import com.duckbox.dto.group.GroupRegisterDto
+import com.duckbox.dto.survey.SurveyDetailDto
 import com.duckbox.dto.survey.SurveyRegisterDto
 import com.duckbox.dto.user.RegisterDto
+import com.duckbox.dto.vote.VoteDetailDto
+import com.duckbox.dto.vote.VoteRegisterDto
 import com.duckbox.errors.exception.NotFoundException
 import org.assertj.core.api.Assertions
 import org.bson.types.ObjectId
@@ -101,6 +104,7 @@ class SurveyServiceTest {
             Assertions.assertThat(isGroup).isEqualTo(mockSurveyRegisterDto.isGroup)
             Assertions.assertThat(images.size).isEqualTo(0)
             Assertions.assertThat(groupId).isEqualTo(null)
+            Assertions.assertThat(questions.size).isEqualTo(2)
             Assertions.assertThat(targets).isEqualTo(null)
             Assertions.assertThat(answerNum).isEqualTo(0)
             Assertions.assertThat(owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
@@ -164,6 +168,62 @@ class SurveyServiceTest {
             Assertions.assertThat(it is NotFoundException).isEqualTo(true)
             Assertions.assertThat(it.message).isEqualTo("Invalid GroupId: [${invalidId}]")
         }
+    }
+
+    @Test
+    fun is_getAllSurveys_works_ok_when_empty() {
+        // act
+        val surveyList: List<SurveyDetailDto> = surveyService.getAllSurvey().body!!
+
+        // assert
+        Assertions.assertThat(surveyList.size).isEqualTo(0)
+    }
+
+    @Test
+    fun is_getAllSurvey_works_ok() {
+        // arrange
+        registerMockUser()
+        val binaryFile: ByteArray = "test file!".toByteArray()
+        val mockDto: SurveyRegisterDto = mockSurveyRegisterDto.copy(images = listOf(binaryFile))
+        val surveyId: String = surveyService.registerSurvey(mockUserEmail, mockDto).body!!
+
+        // act
+        val voteList: List<SurveyDetailDto> = surveyService.getAllSurvey().body!!
+
+        // assert
+        Assertions.assertThat(voteList.size).isEqualTo(1)
+        Assertions.assertThat(voteList[0].id).isEqualTo(surveyId)
+        Assertions.assertThat(voteList[0].images[0]).isEqualTo(binaryFile)
+        Assertions.assertThat(voteList[0].owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
+    }
+
+    @Test
+    fun is_findSurveysOfGroup_works_ok() {
+        // arrange
+        val groupId: String = registerMockUserAndGroup()
+        val mockDto: SurveyRegisterDto = mockSurveyRegisterDto.copy(isGroup = true, groupId = groupId)
+        val binaryFile: ByteArray = "test file!".toByteArray()
+        mockDto.images = listOf(binaryFile)
+        val surveyId: String = surveyService.registerSurvey(mockUserEmail, mockDto).body!!
+
+        // act
+        val voteList: List<SurveyDetailDto> = surveyService.findSurveysOfGroup(groupId).body!!
+
+        // assert
+        Assertions.assertThat(voteList.size).isEqualTo(1)
+        Assertions.assertThat(voteList[0].id).isEqualTo(surveyId)
+        Assertions.assertThat(voteList[0].images[0]).isEqualTo(binaryFile)
+        Assertions.assertThat(voteList[0].owner).isEqualTo(userRepository.findByEmail(mockUserEmail).nickname)
+        Assertions.assertThat(voteList[0].targets!!.size).isEqualTo(mockSurveyRegisterDto.targets!!.size)
+    }
+
+    @Test
+    fun is_findSurveysOfGroup_works_well_when_unregistered_group() {
+        // act
+        val surveyList: List<SurveyDetailDto> = surveyService.findSurveysOfGroup(ObjectId().toString()).body!!
+
+        // assert
+        Assertions.assertThat(surveyList.size).isEqualTo(0)
     }
 
 }

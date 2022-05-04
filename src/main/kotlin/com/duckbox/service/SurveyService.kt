@@ -6,7 +6,9 @@ import com.duckbox.domain.survey.SurveyRepository
 import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.BallotStatus
+import com.duckbox.dto.survey.SurveyDetailDto
 import com.duckbox.dto.survey.SurveyRegisterDto
+import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.errors.exception.NotFoundException
 import org.bson.types.ObjectId
 import org.springframework.http.HttpStatus
@@ -63,6 +65,41 @@ class SurveyService (
             .status(HttpStatus.OK)
             .body(
                 id.toString()
+            )
+    }
+
+    fun getAllSurvey(): ResponseEntity<List<SurveyDetailDto>> {
+        val surveyList: MutableList<SurveyDetailDto> = mutableListOf()
+        surveyRepository.findAll().forEach {
+            // get images
+            val images: MutableList<ByteArray> = mutableListOf()
+            it.images.forEach { photoId ->
+                images.add(photoService.getPhoto(photoId).data)
+            }
+            surveyList.add(it.toSurveyDetailDto(images))
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                surveyList
+            )
+    }
+
+    fun findSurveysOfGroup(_groupId: String): ResponseEntity<List<SurveyDetailDto>> {
+        val groupId: ObjectId = ObjectId(_groupId)
+        val surveyList: MutableList<SurveyDetailDto> = mutableListOf()
+        surveyRepository.findAllByGroupId(groupId.toString()).forEach {
+            // get images
+            val images: MutableList<ByteArray> = mutableListOf()
+            it.images.forEach { photoId ->
+                images.add(photoService.getPhoto(photoId).data)
+            }
+            surveyList.add(it.toSurveyDetailDto(images))
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                surveyList
             )
     }
 }

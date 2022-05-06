@@ -11,5 +11,5 @@ class UserBox (
     var email: String, // == User.email
     var groups: MutableList<ObjectId>,
     var votes: MutableList<ObjectId>,
-    // var surveys: MutableList<ObjectId>
+    var surveys: MutableList<ObjectId>,
 )

@@ -3,12 +3,19 @@ package com.duckbox.service
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.survey.SurveyEntity
 import com.duckbox.domain.survey.SurveyRepository
+import com.duckbox.domain.user.User
+import com.duckbox.domain.user.UserBox
 import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.BallotStatus
+import com.duckbox.domain.vote.VoteEntity
+import com.duckbox.dto.BlindSigToken
 import com.duckbox.dto.survey.SurveyDetailDto
 import com.duckbox.dto.survey.SurveyRegisterDto
+import com.duckbox.dto.user.BlingSigRequestDto
 import com.duckbox.dto.vote.VoteDetailDto
+import com.duckbox.errors.exception.ConflictException
+import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
 import org.bson.types.ObjectId
 import org.springframework.http.HttpStatus
@@ -100,6 +107,72 @@ class SurveyService (
             .status(HttpStatus.OK)
             .body(
                 surveyList
+            )
+    }
+
+    fun generateBlindSigSurveyToken(userEmail: String, blindSigRequestDto: BlingSigRequestDto): ResponseEntity<BlindSigToken> {
+        val surveyObjectId = ObjectId(blindSigRequestDto.targetId)
+
+        // Find user
+        lateinit var user: User
+        runCatching {
+            userRepository.findByEmail(userEmail)
+        }.onSuccess {
+            user = it
+        }.onFailure {
+            throw NotFoundException("User [${userEmail}] was not registered.")
+        }
+        val userBox: UserBox = userBoxRepository.findByEmail(userEmail)
+
+        // Find survey entity
+        lateinit var survey: SurveyEntity
+        runCatching {
+            surveyRepository.findById(surveyObjectId).get()
+        }.onSuccess {
+            survey = it
+        }.onFailure {
+            throw NotFoundException("Invalid SurveyId: [${blindSigRequestDto.targetId}]")
+        }
+
+        // check whether user already received survey token (signature)
+        if (userBox.surveys.find { it == surveyObjectId } != null) {
+            throw ConflictException("User [$userEmail] has already participated in the survey [${blindSigRequestDto.targetId}].")
+        }
+
+        // check user is eligible
+        if (survey.isGroup) {
+            if (survey.targets == null) {
+                // all group member have right to survey
+                if (userBox.groups.find { it == ObjectId(survey.groupId) } == null) {
+                    // but ineligible when user is not a group member
+                    throw ForbiddenException("User [$userEmail] is ineligible for survey [${blindSigRequestDto.targetId}].")
+                }
+            } else if (survey.targets?.find { it == user.studentId } == null) {
+                // only survey.targets have right to survey
+                throw ForbiddenException("User [$userEmail] is ineligible for survey [${blindSigRequestDto.targetId}].")
+            }
+        } // else, all user have right to survey (== community)
+
+        // generate 2 blind signatures: sign with Server's key and SurveyOwner's key
+        val blindMessage: BigInteger = BigInteger(blindSigRequestDto.blindMessage, 16)
+        val blindSigOfServer: BigInteger = blindSignatureService.blindSig(blindMessage)
+        val blindSigOfSurveyOwner: BigInteger = blindSignatureService.blindSig(survey.ownerPrivate, blindMessage)
+
+        // update user's survey record
+        userBox.surveys.add(surveyObjectId)
+        userBoxRepository.save(userBox)
+
+        // update survey's answerNum record
+        survey.answerNum++
+        surveyRepository.save(survey)
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                BlindSigToken( // in radix 16
+                    serverBSig = blindSigOfServer.toString(16),
+                    ownerBSig = blindSigOfSurveyOwner.toString(16)
+                )
             )
     }
 }

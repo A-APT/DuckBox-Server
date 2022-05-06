@@ -97,6 +97,7 @@ class UserService (
                 email = registerDto.email,
                 groups = mutableListOf(),
                 votes = mutableListOf(),
+                surveys = mutableListOf(),
             )
         )
         return ResponseEntity

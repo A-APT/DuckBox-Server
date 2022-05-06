@@ -15,7 +15,7 @@ import com.duckbox.dto.user.BlingSigRequestDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
-import com.duckbox.dto.vote.VoteToken
+import com.duckbox.dto.BlindSigToken
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
@@ -258,11 +258,11 @@ class VoteServiceTest {
         val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = blindedData.blindM.toString(16))
 
         // act
-        val voteToken: VoteToken = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
-        val serverToken: BigInteger = BigInteger(voteToken.serverToken, 16)
-        val voteOwnerToken: BigInteger = BigInteger(voteToken.voteOwnerToken, 16)
-        val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverToken)
-        val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, voteOwnerToken)
+        val voteToken: BlindSigToken = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
+        val serverBSig: BigInteger = BigInteger(voteToken.serverBSig, 16)
+        val ownerBSig: BigInteger = BigInteger(voteToken.ownerBSig, 16)
+        val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverBSig)
+        val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, ownerBSig)
 
         // assert
         userBoxRepository.findByEmail(mockUserEmail).apply {
@@ -289,11 +289,11 @@ class VoteServiceTest {
         val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = blindedData.blindM.toString(16))
 
         // act
-        val voteToken: VoteToken = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
-        val serverToken: BigInteger = BigInteger(voteToken.serverToken, 16)
-        val voteOwnerToken: BigInteger = BigInteger(voteToken.voteOwnerToken, 16)
-        val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverToken)
-        val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, voteOwnerToken)
+        val voteToken: BlindSigToken = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
+        val serverBSig: BigInteger = BigInteger(voteToken.serverBSig, 16)
+        val ownerBSig: BigInteger = BigInteger(voteToken.ownerBSig, 16)
+        val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverBSig)
+        val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, ownerBSig)
 
         // assert
         userBoxRepository.findByEmail(mockUserEmail).apply {
@@ -319,11 +319,11 @@ class VoteServiceTest {
         val blindSigRequestDto = BlingSigRequestDto(targetId = voteId, blindMessage = blindedData.blindM.toString(16))
 
         // act
-        val voteToken: VoteToken = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
-        val serverToken: BigInteger = BigInteger(voteToken.serverToken, 16)
-        val voteOwnerToken: BigInteger = BigInteger(voteToken.voteOwnerToken, 16)
-        val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverToken)
-        val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, voteOwnerToken)
+        val voteToken: BlindSigToken = voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
+        val serverBSig: BigInteger = BigInteger(voteToken.serverBSig, 16)
+        val ownerBSig: BigInteger = BigInteger(voteToken.ownerBSig, 16)
+        val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverBSig)
+        val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, ownerBSig)
 
         // assert
         userBoxRepository.findByEmail(mockUserEmail).apply {

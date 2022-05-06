@@ -11,7 +11,7 @@ import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.user.BlingSigRequestDto
 import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
-import com.duckbox.dto.vote.VoteToken
+import com.duckbox.dto.BlindSigToken
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
@@ -114,7 +114,7 @@ class VoteService (
             )
     }
 
-    fun generateBlindSigVoteToken(userEmail: String, blindSigRequestDto: BlingSigRequestDto): ResponseEntity<VoteToken> {
+    fun generateBlindSigVoteToken(userEmail: String, blindSigRequestDto: BlingSigRequestDto): ResponseEntity<BlindSigToken> {
         val voteObjectId = ObjectId(blindSigRequestDto.targetId)
 
         // Find user
@@ -173,9 +173,9 @@ class VoteService (
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(
-                VoteToken( // in radix 16
-                    serverToken = blindSigOfServer.toString(16),
-                    voteOwnerToken = blindSigOfVoteOwner.toString(16)
+                BlindSigToken( // in radix 16
+                    serverBSig = blindSigOfServer.toString(16),
+                    ownerBSig = blindSigOfVoteOwner.toString(16)
                 )
             )
     }

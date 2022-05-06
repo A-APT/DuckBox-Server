@@ -3,7 +3,7 @@ package com.duckbox.controller
 import com.duckbox.dto.user.BlingSigRequestDto
 import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
-import com.duckbox.dto.vote.VoteToken
+import com.duckbox.dto.BlindSigToken
 import com.duckbox.security.JWTTokenProvider
 import com.duckbox.service.VoteService
 import org.springframework.http.ResponseEntity
@@ -32,7 +32,7 @@ class VoteController (
     }
 
     @PostMapping("/api/v1/vote/my")
-    fun generateVoteToken(@RequestHeader httpHeaders: Map<String, String>, @RequestBody blindSigRequestDto: BlingSigRequestDto): ResponseEntity<VoteToken> {
+    fun generateVoteToken(@RequestHeader httpHeaders: Map<String, String>, @RequestBody blindSigRequestDto: BlingSigRequestDto): ResponseEntity<BlindSigToken> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
         return voteService.generateBlindSigVoteToken(userEmail, blindSigRequestDto)
     }

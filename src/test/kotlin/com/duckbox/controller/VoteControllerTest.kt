@@ -2,7 +2,6 @@ package com.duckbox.controller
 
 import BlindSecp256k1
 import BlindedData
-import Point
 import com.duckbox.DefinedValue
 import com.duckbox.MockDto
 import com.duckbox.domain.group.GroupRepository
@@ -16,7 +15,7 @@ import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
-import com.duckbox.dto.vote.VoteToken
+import com.duckbox.dto.BlindSigToken
 import com.duckbox.service.GroupService
 import com.duckbox.service.UserService
 import com.duckbox.service.VoteService
@@ -259,14 +258,14 @@ class VoteControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/vote/my", HttpMethod.POST, httpEntity, VoteToken::class.java)
+            .exchange("${baseAddress}/api/v1/vote/my", HttpMethod.POST, httpEntity, BlindSigToken::class.java)
             .apply {
                 assertThat(statusCode).isEqualTo(HttpStatus.OK)
-                val voteToken: VoteToken = body!!
-                val serverToken: BigInteger = BigInteger(voteToken.serverToken, 16)
-                val voteOwnerToken: BigInteger = BigInteger(voteToken.voteOwnerToken, 16)
-                val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverToken)
-                val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, voteOwnerToken)
+                val voteToken: BlindSigToken = body!!
+                val serverBSig: BigInteger = BigInteger(voteToken.serverBSig, 16)
+                val ownerBSig: BigInteger = BigInteger(voteToken.ownerBSig, 16)
+                val serverSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, serverBSig)
+                val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, ownerBSig)
 
                 assertThat(blindSecp256k1.verify(serverSig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
                 assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.voteOwnerPublic)).isEqualTo(true)

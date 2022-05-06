@@ -131,7 +131,8 @@ class UserService (
                     token = jwtToken.token,
                     refreshToken = jwtToken.refreshToken,
                     did = user.did,
-                    studentId = user.studentId
+                    studentId = user.studentId,
+                    nickname = user.nickname
                 )
             )
     }

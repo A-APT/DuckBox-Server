@@ -236,7 +236,7 @@ class VoteControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/vote/my", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/vote/signatures", HttpMethod.POST, httpEntity, Unit::class.java)
             .apply {
                 assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
@@ -258,7 +258,7 @@ class VoteControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/vote/my", HttpMethod.POST, httpEntity, BlindSigToken::class.java)
+            .exchange("${baseAddress}/api/v1/vote/signatures", HttpMethod.POST, httpEntity, BlindSigToken::class.java)
             .apply {
                 assertThat(statusCode).isEqualTo(HttpStatus.OK)
                 val voteToken: BlindSigToken = body!!
@@ -284,7 +284,7 @@ class VoteControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/vote/my", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/vote/signatures", HttpMethod.POST, httpEntity, Unit::class.java)
             .apply {
                 assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }

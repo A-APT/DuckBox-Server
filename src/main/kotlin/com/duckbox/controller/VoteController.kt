@@ -31,7 +31,7 @@ class VoteController (
         return voteService.findVotesOfGroup(groupId)
     }
 
-    @PostMapping("/api/v1/vote/my")
+    @PostMapping("/api/v1/vote/signatures")
     fun generateVoteToken(@RequestHeader httpHeaders: Map<String, String>, @RequestBody blindSigRequestDto: BlingSigRequestDto): ResponseEntity<BlindSigToken> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
         return voteService.generateBlindSigVoteToken(userEmail, blindSigRequestDto)

@@ -15,10 +15,10 @@ object DefinedValue {
         BigInteger("79a09b8427069518535389161410ae45643588fd945919b9f53f6e1a5b98554f", 16)
     )
 
-    val voteOwnerPrivate: String = "3a3eb88cc8cfc1c5dcaf67bfd7fef3609bdc7fab6fe8a43af6adc16586fbd6e5"
+    val ownerPrivate: String = "3a3eb88cc8cfc1c5dcaf67bfd7fef3609bdc7fab6fe8a43af6adc16586fbd6e5"
     // => BigInteger("3a3eb88cc8cfc1c5dcaf67bfd7fef3609bdc7fab6fe8a43af6adc16586fbd6e5", 16)
 
-    val voteOwnerPublic: Point = Point(
+    val ownerPublic: Point = Point(
         BigInteger("4719ded852f84728c0e25e2a7111e880f4ef516155f62e3db82be7b2981b0323", 16),
         BigInteger("e84813d29f2125b707bc94244aec3c3d52a8025b5f7c988c92736daa22a621ac", 16)
     )

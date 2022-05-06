@@ -37,7 +37,7 @@ object MockDto {
         startTime = Date(),
         finishTime = Date(),
         images = listOf(),
-        ownerPrivate = DefinedValue.voteOwnerPrivate,
+        ownerPrivate = DefinedValue.ownerPrivate,
         candidates = listOf("a", "b"),
         voters = listOf(1, 2),
         reward = false,
@@ -52,7 +52,7 @@ object MockDto {
         startTime = Date(),
         finishTime = Date(),
         images = listOf(),
-        ownerPrivate = DefinedValue.voteOwnerPrivate,
+        ownerPrivate = DefinedValue.ownerPrivate,
         questions = listOf(
             Question(QuestionType.MULTI, "hi", listOf("A", "B")),
             Question(QuestionType.LIKERT, "bye", null)

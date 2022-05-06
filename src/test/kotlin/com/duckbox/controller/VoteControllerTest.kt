@@ -268,7 +268,7 @@ class VoteControllerTest {
                 val voteOwnerSig: BigInteger = blindSecp256k1.unblind(blindedData.a, blindedData.b, ownerBSig)
 
                 assertThat(blindSecp256k1.verify(serverSig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
-                assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.voteOwnerPublic)).isEqualTo(true)
+                assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.ownerPublic)).isEqualTo(true)
             }
     }
 

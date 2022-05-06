@@ -270,7 +270,7 @@ class VoteServiceTest {
             assertThat(votes[0]).isEqualTo(ObjectId(voteId))
         }
         assertThat(blindSecp256k1.verify(serverSig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
-        assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.voteOwnerPublic)).isEqualTo(true)
+        assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.ownerPublic)).isEqualTo(true)
         assertThat(voteRepository.findById(ObjectId(voteId)).get().voteNum).isEqualTo(1)
     }
 
@@ -301,7 +301,7 @@ class VoteServiceTest {
             assertThat(votes[0]).isEqualTo(ObjectId(voteId))
         }
         assertThat(blindSecp256k1.verify(serverSig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
-        assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.voteOwnerPublic)).isEqualTo(true)
+        assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.ownerPublic)).isEqualTo(true)
     }
 
     @Test
@@ -331,7 +331,7 @@ class VoteServiceTest {
             assertThat(votes[0]).isEqualTo(ObjectId(voteId))
         }
         assertThat(blindSecp256k1.verify(serverSig, blindedData.R, message, DefinedValue.pubkey)).isEqualTo(true)
-        assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.voteOwnerPublic)).isEqualTo(true)
+        assertThat(blindSecp256k1.verify(voteOwnerSig, blindedData.R, message, DefinedValue.ownerPublic)).isEqualTo(true)
     }
 
     @Test

@@ -17,8 +17,10 @@ import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt
 import org.web3j.protocol.core.methods.response.EthSendTransaction
 import org.web3j.protocol.core.methods.response.TransactionReceipt
 import org.web3j.tx.RawTransactionManager
+import org.web3j.tx.TransactionManager
 import org.web3j.tx.Transfer
 import org.web3j.tx.gas.DefaultGasProvider
+import org.web3j.tx.response.PollingTransactionReceiptProcessor
 import org.web3j.utils.Convert
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -34,7 +36,7 @@ class EthereumService(private val web3j: Web3j) {
     private lateinit var ownerPrivate: String
 
     val gasPrice: BigInteger = web3j.ethGasPrice().sendAsync().get().gasPrice
-    val gasLimit: BigInteger = BigInteger.valueOf(800000) // gasLimit (ropsten)
+    val gasLimit: BigInteger = BigInteger.valueOf(8000000) // gasLimit (ropsten)
 
     fun ethCall(contractAddress: String, functionName: String, inputParams: List<Type<*>>, outputParams: List<TypeReference<*>>): Any? {
         // generate function
@@ -96,11 +98,12 @@ class EthereumService(private val web3j: Web3j) {
             throw EthereumException(ethSend.error.message)
         }
 
-//        val processor = PollingTransactionReceiptProcessor(
-//            web3j,
-//            TransactionManager.DEFAULT_POLLING_FREQUENCY,
-//            TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH)
-//        val receipt = processor.waitForTransactionReceipt(ethSend.transactionHash)
+        val processor = PollingTransactionReceiptProcessor(
+            web3j,
+            TransactionManager.DEFAULT_POLLING_FREQUENCY,
+            TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH)
+        val receipt = processor.waitForTransactionReceipt(ethSend.transactionHash)
+        println(receipt) // temp
 
         // decode response
         val decode = FunctionReturnDecoder.decode(ethSend.result, function.outputParameters)

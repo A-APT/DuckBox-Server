@@ -21,7 +21,7 @@ class BallotServiceTest {
     @Autowired
     private lateinit var hashUtils: HashUtils
 
-    private val did = "did.test"
+    private val did = "did.test2"
     private val ballotId = "ballot2"
 
     //@Test

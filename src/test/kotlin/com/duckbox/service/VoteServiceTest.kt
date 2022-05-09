@@ -63,6 +63,7 @@ class VoteServiceTest {
 
     private val mockVoteRegisterDto: VoteRegisterDto = MockDto.mockVoteRegisterDto
     private val mockUserEmail = "email@konkuk.ac.kr"
+    private val mockUserEmail2 = "email_2@konkuk.ac.kr"
     private val mockStudentId = 2019333
 
     @BeforeEach
@@ -84,6 +85,21 @@ class VoteServiceTest {
                 email = mockUserEmail,
                 phoneNumber = "01012341234",
                 nickname = "duck",
+                college = "ku",
+                department = listOf("computer", "software")
+            )
+        )
+    }
+
+    fun registerMockUser2() {
+        userService.register(
+            RegisterDto(
+                studentId = 2019333,
+                name = "je",
+                password = "test",
+                email = mockUserEmail2,
+                phoneNumber = "01012341234",
+                nickname = "duck!",
                 college = "ku",
                 department = listOf("computer", "software")
             )
@@ -394,6 +410,7 @@ class VoteServiceTest {
     fun is_generateBlindSigVoteToken_works_user_is_not_a_group_member() {
         // arrange
         registerMockUser() // create user
+        registerMockUser2() // create another user: not a group menber
         val mockGroupDto: GroupRegisterDto = MockDto.mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
         val groupId: String = groupService.registerGroup(mockUserEmail, mockGroupDto).body!! // create group
         val mockVoteDto = MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = null)
@@ -403,12 +420,12 @@ class VoteServiceTest {
 
         // act & assert
         runCatching {
-            voteService.generateBlindSigVoteToken(mockUserEmail, blindSigRequestDto).body!!
+            voteService.generateBlindSigVoteToken(mockUserEmail2, blindSigRequestDto).body!!
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
             assertThat(it is ForbiddenException).isEqualTo(true)
-            assertThat(it.message).isEqualTo("User [${mockUserEmail}] is ineligible for vote [${blindSigRequestDto.targetId}].")
+            assertThat(it.message).isEqualTo("User [${mockUserEmail2}] is ineligible for vote [${blindSigRequestDto.targetId}].")
         }
     }
 

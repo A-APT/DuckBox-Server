@@ -85,6 +85,12 @@ class GroupService (
             )
         ).id
 
+        // add to owner's box
+        userBoxRepository.findByEmail(userEmail).apply {
+            groups.add(id)
+            userBoxRepository.save(this)
+        }
+
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(

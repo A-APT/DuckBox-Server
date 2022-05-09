@@ -48,6 +48,7 @@ class GroupServiceTest {
 
     private val mockGroupRegisterDto: GroupRegisterDto = MockDto.mockGroupRegisterDto
     private val mockUserEmail = "email@konkuk.ac.kr"
+    private val mockUserEmail2 = "email_2@konkuk.ac.kr"
 
     @BeforeEach
     @AfterEach
@@ -67,6 +68,21 @@ class GroupServiceTest {
                 email = mockUserEmail,
                 phoneNumber = "01012341234",
                 nickname = "duck",
+                college = "ku",
+                department = listOf("computer", "software")
+            )
+        )
+    }
+
+    fun registerMockUser2() {
+        userService.register(
+            RegisterDto(
+                studentId = 2019333,
+                name = "je",
+                password = "test",
+                email = mockUserEmail2,
+                phoneNumber = "01012341234",
+                nickname = "duck!",
                 college = "ku",
                 department = listOf("computer", "software")
             )
@@ -96,15 +112,19 @@ class GroupServiceTest {
         // act
         registerMockUser()
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
-        groupService.registerGroup(mockUserEmail, mockDto)
+        val groupId: ObjectId = ObjectId(groupService.registerGroup(mockUserEmail, mockDto).body!!)
 
         // assert
         groupRepository.findByName(mockGroupRegisterDto.name).apply {
+            assertThat(id).isEqualTo(groupId)
             assertThat(name).isEqualTo(mockGroupRegisterDto.name)
             assertThat(description).isEqualTo(mockGroupRegisterDto.description)
             assertThat(profile).isEqualTo(mockGroupRegisterDto.profile)
             assertThat(header).isEqualTo(mockGroupRegisterDto.header)
             assertThat(status).isEqualTo(GroupStatus.PENDING)
+        }
+        userBoxRepository.findByEmail(mockUserEmail).apply {
+            assertThat(groups[0]).isEqualTo(groupId)
         }
     }
 
@@ -305,14 +325,15 @@ class GroupServiceTest {
     fun is_joinGroup_works_well() {
         // arrange
         registerMockUser()
+        registerMockUser2()
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
         val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
 
         // act
-        groupService.joinGroup(mockUserEmail, groupId)
+        groupService.joinGroup(mockUserEmail2, groupId)
 
         // assert
-        userBoxRepository.findByEmail(mockUserEmail).apply {
+        userBoxRepository.findByEmail(mockUserEmail2).apply {
             assertThat(groups.size).isEqualTo(1)
             assertThat(groups[0]).isEqualTo(ObjectId(groupId))
         }
@@ -388,7 +409,6 @@ class GroupServiceTest {
         mockDto.profile = "profile file!".toByteArray()
         mockDto.header = "header file!".toByteArray()
         val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
-        groupService.joinGroup(mockUserEmail, groupId)
 
         // act
         val groupList: List<GroupDetailDto> = groupService.findGroupsOfUser(mockUserEmail).body!!
@@ -400,11 +420,29 @@ class GroupServiceTest {
     }
 
     @Test
+    fun is_findGroupsByUser_works_well_on_not_group_owner() {
+        // arrange
+        registerMockUser()
+        registerMockUser2()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        mockDto.profile = "profile file!".toByteArray()
+        mockDto.header = "header file!".toByteArray()
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        groupService.joinGroup(mockUserEmail2, groupId)
+
+        // act
+        val groupList: List<GroupDetailDto> = groupService.findGroupsOfUser(mockUserEmail2).body!!
+
+        // assert
+        assertThat(groupList.size).isEqualTo(1)
+        assertThat(groupList[0].profile).isEqualTo(mockDto.profile)
+        assertThat(groupList[0].header).isEqualTo(mockDto.header)
+    }
+
+    @Test
     fun is_findGroupsByUser_works_well_when_empty_joined_group() {
         // arrange
         registerMockUser()
-        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
-        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
 
         // act
         val groupList: List<GroupDetailDto> = groupService.findGroupsOfUser(mockUserEmail).body!!

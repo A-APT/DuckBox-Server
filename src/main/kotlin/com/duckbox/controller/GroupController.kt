@@ -1,5 +1,6 @@
 package com.duckbox.controller
 
+import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
@@ -49,5 +50,11 @@ class GroupController (
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
         groupService.joinGroup(userEmail, groupId)
         return ResponseEntity.noContent().build()
+    }
+
+    @GetMapping("/api/v1/groups/items")
+    fun findGroupVoteAndSurveyOfUser(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<List<OverallDetailDto>> {
+        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
+        return groupService.findGroupVoteAndSurveyOfUser(userEmail)
     }
 }

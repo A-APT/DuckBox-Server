@@ -3,8 +3,11 @@ package com.duckbox.controller
 import com.duckbox.MockDto
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.photo.PhotoRepository
+import com.duckbox.domain.survey.SurveyRepository
 import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.domain.vote.VoteRepository
+import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
@@ -12,7 +15,9 @@ import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.service.GroupService
+import com.duckbox.service.SurveyService
 import com.duckbox.service.UserService
+import com.duckbox.service.VoteService
 import org.assertj.core.api.Assertions
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
@@ -54,6 +59,18 @@ class GroupControllerTest {
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
 
+    @Autowired
+    private lateinit var voteRepository: VoteRepository
+
+    @Autowired
+    private lateinit var voteService: VoteService
+
+    @Autowired
+    private lateinit var surveyRepository: SurveyRepository
+
+    @Autowired
+    private lateinit var surveyService: SurveyService
+
     private lateinit var baseAddress: String
 
     private val mockGroupRegisterDto: GroupRegisterDto = MockDto.mockGroupRegisterDto
@@ -68,6 +85,8 @@ class GroupControllerTest {
         photoRepository.deleteAll()
         userRepository.deleteAll()
         userBoxRepository.deleteAll()
+        voteRepository.deleteAll()
+        surveyRepository.deleteAll()
     }
 
     fun registerAndLogin(): String {
@@ -409,6 +428,42 @@ class GroupControllerTest {
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
                 Assertions.assertThat(body!!.size).isEqualTo(1)
+            }
+    }
+
+    @Test
+    fun is_findGroupVoteAndSurveyOfUser_throws_when_no_headers_token() {
+        // act, assert
+        restTemplate
+            .getForEntity("${baseAddress}/api/v1/groups/items", Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_findGroupVoteAndSurveyOfUser_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val httpEntity = HttpEntity(null, httpHeaders)
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        val voteId1: String = voteService.registerVote(
+            mockUserEmail,
+            MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = null)).body!!
+        val surveyId1: String = surveyService.registerSurvey(
+            mockUserEmail,
+            MockDto.mockSurveyRegisterDto.copy(isGroup = true, groupId = groupId, targets = null)).body!!
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/groups/items", HttpMethod.GET, httpEntity, Array<OverallDetailDto>::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
+                Assertions.assertThat(body!!.size).isEqualTo(2)
             }
     }
 }

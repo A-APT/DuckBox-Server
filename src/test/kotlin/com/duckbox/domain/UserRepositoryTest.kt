@@ -27,7 +27,8 @@ class UserRepositoryTest {
         nickname = "duck",
         college = "ku",
         department = listOf("computer", "software"),
-        roles = setOf("ROLE_USER")
+        roles = setOf("ROLE_USER"),
+        fcmToken = "temp",
     )
 
     @BeforeEach

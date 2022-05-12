@@ -99,7 +99,8 @@ class SurveyControllerTest {
                 phoneNumber = "01012341234",
                 nickname = "duck",
                 college = "ku",
-                department = listOf("computer", "software")
+                department = listOf("computer", "software"),
+                fcmToken = "temp",
             )
         )
         return userService.login(

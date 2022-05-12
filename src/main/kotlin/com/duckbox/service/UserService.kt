@@ -88,7 +88,8 @@ class UserService (
                 nickname = registerDto.nickname,
                 college = registerDto.college,
                 department = registerDto.department,
-                roles = setOf("ROLE_USER")
+                roles = setOf("ROLE_USER"),
+                fcmToken = registerDto.fcmToken,
             )
         ).id
         userBoxRepository.save(

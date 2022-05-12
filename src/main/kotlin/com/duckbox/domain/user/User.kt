@@ -40,7 +40,10 @@ class User (
     var department: List<String>,
 
     @ElementCollection(fetch = FetchType.EAGER)
-    var roles: Set<String>
+    var roles: Set<String>,
+
+    @Column(nullable = false)
+    var fcmToken: String,
 
 ): UserDetails {
     override fun getAuthorities(): MutableCollection<out GrantedAuthority> {

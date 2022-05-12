@@ -5,9 +5,11 @@ import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
 import com.duckbox.domain.user.UserBox
 import com.duckbox.domain.user.UserBoxRepository
+import com.duckbox.domain.user.UserRepository
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
+import com.duckbox.dto.notification.NotificationMessage
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.NotFoundException
 import org.bson.types.ObjectId
@@ -20,6 +22,8 @@ class GroupService (
     private val groupRepository: GroupRepository,
     private val photoService: PhotoService,
     private val userService: UserService,
+    private val fcmService: FCMService,
+    private val userRepository: UserRepository,
     private val userBoxRepository: UserBoxRepository,
 ){
 
@@ -161,5 +165,11 @@ class GroupService (
             .body(
                 groupDtoList
             )
+    }
+
+    fun testNotification(userEmail: String) {
+        val fcmToken: String = userRepository.findByEmail(userEmail).fcmToken
+        val message = NotificationMessage(target = fcmToken, title = "group", message = "groupId")
+        fcmService.sendNotification(message, false)
     }
 }

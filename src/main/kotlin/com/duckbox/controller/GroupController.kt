@@ -50,4 +50,12 @@ class GroupController (
         groupService.joinGroup(userEmail, groupId)
         return ResponseEntity.noContent().build()
     }
+
+    /* for test notification */
+    @GetMapping("/api/v1/group/member/notification")
+    fun testNotification(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<Unit> {
+        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
+        groupService.testNotification(userEmail)
+        return ResponseEntity.noContent().build()
+    }
 }

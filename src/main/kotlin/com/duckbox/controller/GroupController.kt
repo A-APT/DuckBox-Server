@@ -16,18 +16,18 @@ class GroupController (
     private val jwtTokenProvider: JWTTokenProvider
 ) {
 
-    @GetMapping("/api/v1/group/all")
+    @GetMapping("/api/v1/groups/all")
     fun getAllGroup(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<List<GroupDetailDto>> {
         return groupService.getGroups()
     }
 
-    @GetMapping("/api/v1/group/my")
+    @GetMapping("/api/v1/groups")
     fun getGroupsOfUser(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<List<GroupDetailDto>> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
         return groupService.findGroupsOfUser(userEmail)
     }
 
-    @GetMapping("/api/v1/group/{query}")
+    @GetMapping("/api/v1/groups/{query}")
     fun searchGroup(@RequestHeader httpHeaders: Map<String, String>, @PathVariable query: String): ResponseEntity<List<GroupDetailDto>> {
         return groupService.searchGroup(query)
     }

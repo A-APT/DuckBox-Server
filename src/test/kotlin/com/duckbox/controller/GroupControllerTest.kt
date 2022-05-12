@@ -125,7 +125,7 @@ class GroupControllerTest {
     fun is_getGroups_works_no_headers_token() {
         // act, assert
         restTemplate
-            .getForEntity("${baseAddress}/api/v1/group/all", Unit::class.java)
+            .getForEntity("${baseAddress}/api/v1/groups/all", Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
@@ -144,7 +144,7 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group/all", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
+            .exchange("${baseAddress}/api/v1/groups/all", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
                 Assertions.assertThat(body!!.size).isEqualTo(1)
@@ -380,8 +380,9 @@ class GroupControllerTest {
     @Test
     fun is_searchGroup_works_no_headers_token() {
         // act, assert
+        val query = "test"
         restTemplate
-            .getForEntity("${baseAddress}/api/v1/group", Unit::class.java)
+            .getForEntity("${baseAddress}/api/v1/groups/$query", Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
@@ -403,10 +404,20 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group/$query", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
+            .exchange("${baseAddress}/api/v1/groups/$query", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
                 Assertions.assertThat(body!!.size).isEqualTo(2)
+            }
+    }
+
+    @Test
+    fun is_findGroupsByUser_throws_when_no_headers_token() {
+        // act, assert
+        restTemplate
+            .getForEntity("${baseAddress}/api/v1/groups", Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
     }
 
@@ -424,7 +435,7 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group/my", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
+            .exchange("${baseAddress}/api/v1/groups", HttpMethod.GET, httpEntity, Array<GroupDetailDto>::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
                 Assertions.assertThat(body!!.size).isEqualTo(1)

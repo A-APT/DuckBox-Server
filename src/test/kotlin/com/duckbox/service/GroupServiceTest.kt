@@ -5,8 +5,11 @@ import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
 import com.duckbox.domain.photo.PhotoRepository
+import com.duckbox.domain.survey.SurveyRepository
 import com.duckbox.domain.user.UserBoxRepository
 import com.duckbox.domain.user.UserRepository
+import com.duckbox.domain.vote.VoteRepository
+import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
@@ -46,9 +49,23 @@ class GroupServiceTest {
     @Autowired
     private lateinit var userService: UserService
 
+    @Autowired
+    private lateinit var voteRepository: VoteRepository
+
+    @Autowired
+    private lateinit var voteService: VoteService
+
+    @Autowired
+    private lateinit var surveyRepository: SurveyRepository
+
+    @Autowired
+    private lateinit var surveyService: SurveyService
+
+
     private val mockGroupRegisterDto: GroupRegisterDto = MockDto.mockGroupRegisterDto
     private val mockUserEmail = "email@konkuk.ac.kr"
     private val mockUserEmail2 = "email_2@konkuk.ac.kr"
+    private val mockUserStudentId = 20191333
 
     @BeforeEach
     @AfterEach
@@ -57,12 +74,14 @@ class GroupServiceTest {
         photoRepository.deleteAll()
         userRepository.deleteAll()
         userBoxRepository.deleteAll()
+        voteRepository.deleteAll()
+        surveyRepository.deleteAll()
     }
 
     fun registerMockUser() {
         userService.register(
             RegisterDto(
-                studentId = 2019333,
+                studentId = mockUserStudentId,
                 name = "je",
                 password = "test",
                 email = mockUserEmail,
@@ -77,7 +96,7 @@ class GroupServiceTest {
     fun registerMockUser2() {
         userService.register(
             RegisterDto(
-                studentId = 2019333,
+                studentId = mockUserStudentId,
                 name = "je",
                 password = "test",
                 email = mockUserEmail2,
@@ -449,6 +468,152 @@ class GroupServiceTest {
 
         // assert
         assertThat(groupList.size).isEqualTo(0)
+    }
+
+    @Test
+    fun is_findGroupVoteAndSurveyOfUser_works_well_on_empty() {
+        // arrange
+        registerMockUser()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+
+        // act
+        val detailDtoList: List<OverallDetailDto> = groupService.findGroupVoteAndSurveyOfUser(mockUserEmail).body!!
+
+        // assert
+        assertThat(detailDtoList.size).isEqualTo(0)
+    }
+
+    @Test
+    fun is_findGroupVoteAndSurveyOfUser_works_well_on_vote() {
+        // arrange
+        registerMockUser()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        val voteId1: String = voteService.registerVote(
+            mockUserEmail,
+            MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = null)).body!!
+        val voteId2: String = voteService.registerVote(
+            mockUserEmail,
+            MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = null)).body!!
+        val voteId3: String = voteService.registerVote(
+            mockUserEmail,
+            MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = listOf(mockUserStudentId))).body!!
+        val voteId4: String = voteService.registerVote(
+            mockUserEmail,
+            MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = listOf(1, 2))).body!!
+        userBoxRepository.findByEmail(mockUserEmail).apply {
+            votes.add(ObjectId(voteId1))
+            userBoxRepository.save(this)
+        }
+
+        // act
+        val detailDtoList: List<OverallDetailDto> = groupService.findGroupVoteAndSurveyOfUser(mockUserEmail).body!!
+
+        // assert
+        assertThat(detailDtoList.size).isEqualTo(3)
+        detailDtoList.find { it.id == voteId1 }!!.apply {
+            assertThat(isVote).isEqualTo(true)
+            assertThat(isAvailable).isEqualTo(false)
+        }
+        detailDtoList.find { it.id == voteId2 }!!.apply {
+            assertThat(isVote).isEqualTo(true)
+            assertThat(isAvailable).isEqualTo(true)
+        }
+        detailDtoList.find { it.id == voteId3 }!!.apply {
+            assertThat(isVote).isEqualTo(true)
+            assertThat(isAvailable).isEqualTo(true)
+        }
+        assertThat(detailDtoList.find { it.id == voteId4 }).isEqualTo(null)
+    }
+
+    @Test
+    fun is_findGroupVoteAndSurveyOfUser_works_well_on_survey() {
+        // arrange
+        registerMockUser()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        val surveyId1: String = surveyService.registerSurvey(
+            mockUserEmail,
+            MockDto.mockSurveyRegisterDto.copy(isGroup = true, groupId = groupId, targets = null)).body!!
+        val surveyId2: String = surveyService.registerSurvey(
+            mockUserEmail,
+            MockDto.mockSurveyRegisterDto.copy(isGroup = true, groupId = groupId, targets = null)).body!!
+        val surveyId3: String = surveyService.registerSurvey(
+            mockUserEmail,
+            MockDto.mockSurveyRegisterDto.copy(isGroup = true, groupId = groupId, targets = listOf(mockUserStudentId))).body!!
+        val surveyId4: String = surveyService.registerSurvey(
+            mockUserEmail,
+            MockDto.mockSurveyRegisterDto.copy(isGroup = true, groupId = groupId, targets = listOf(1, 2))).body!!
+        userBoxRepository.findByEmail(mockUserEmail).apply {
+            surveys.add(ObjectId(surveyId1))
+            userBoxRepository.save(this)
+        }
+
+        // act
+        val detailDtoList: List<OverallDetailDto> = groupService.findGroupVoteAndSurveyOfUser(mockUserEmail).body!!
+
+        // assert
+        assertThat(detailDtoList.size).isEqualTo(3)
+        detailDtoList.find { it.id == surveyId1 }!!.apply {
+            assertThat(isVote).isEqualTo(false)
+            assertThat(isAvailable).isEqualTo(false)
+        }
+        detailDtoList.find { it.id == surveyId2 }!!.apply {
+            assertThat(isVote).isEqualTo(false)
+            assertThat(isAvailable).isEqualTo(true)
+        }
+        detailDtoList.find { it.id == surveyId3 }!!.apply {
+            assertThat(isVote).isEqualTo(false)
+            assertThat(isAvailable).isEqualTo(true)
+        }
+        assertThat(detailDtoList.find { it.id == surveyId4 }).isEqualTo(null)
+    }
+
+    @Test
+    fun is_findGroupVoteAndSurveyOfUser_works_well_on_vote_and_survey() {
+        // arrange
+        registerMockUser()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        val voteId1: String = voteService.registerVote(
+            mockUserEmail,
+            MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = null)).body!!
+        val voteId2: String = voteService.registerVote(
+            mockUserEmail,
+            MockDto.mockVoteRegisterDto.copy(isGroup = true, groupId = groupId, voters = listOf(mockUserStudentId))).body!!
+        val surveyId1: String = surveyService.registerSurvey(
+            mockUserEmail,
+            MockDto.mockSurveyRegisterDto.copy(isGroup = true, groupId = groupId, targets = null)).body!!
+        val surveyId2: String = surveyService.registerSurvey(
+            mockUserEmail,
+            MockDto.mockSurveyRegisterDto.copy(isGroup = true, groupId = groupId, targets = listOf(mockUserStudentId))).body!!
+        userBoxRepository.findByEmail(mockUserEmail).apply {
+            votes.add(ObjectId(voteId1))
+            userBoxRepository.save(this)
+        }
+
+        // act
+        val detailDtoList: List<OverallDetailDto> = groupService.findGroupVoteAndSurveyOfUser(mockUserEmail).body!!
+
+        // assert
+        assertThat(detailDtoList.size).isEqualTo(4)
+        detailDtoList.find { it.id == voteId1 }!!.apply {
+            assertThat(isVote).isEqualTo(true)
+            assertThat(isAvailable).isEqualTo(false)
+        }
+        detailDtoList.find { it.id == voteId2 }!!.apply {
+            assertThat(isVote).isEqualTo(true)
+            assertThat(isAvailable).isEqualTo(true)
+        }
+        detailDtoList.find { it.id == surveyId1 }!!.apply {
+            assertThat(isVote).isEqualTo(false)
+            assertThat(isAvailable).isEqualTo(true)
+        }
+        detailDtoList.find { it.id == surveyId2 }!!.apply {
+            assertThat(isVote).isEqualTo(false)
+            assertThat(isAvailable).isEqualTo(true)
+        }
     }
 
 }

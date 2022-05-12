@@ -3,8 +3,12 @@ package com.duckbox.service
 import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
+import com.duckbox.domain.survey.SurveyRepository
 import com.duckbox.domain.user.UserBox
 import com.duckbox.domain.user.UserBoxRepository
+import com.duckbox.domain.user.UserRepository
+import com.duckbox.domain.vote.VoteRepository
+import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
@@ -20,7 +24,10 @@ class GroupService (
     private val groupRepository: GroupRepository,
     private val photoService: PhotoService,
     private val userService: UserService,
+    private val userRepository: UserRepository,
     private val userBoxRepository: UserBoxRepository,
+    private val voteRepository: VoteRepository,
+    private val surveyRepository: SurveyRepository,
 ){
 
     fun getGroups(): ResponseEntity<List<GroupDetailDto>> {
@@ -51,6 +58,46 @@ class GroupService (
             .status(HttpStatus.OK)
             .body(
                 groupDtoList
+            )
+    }
+
+    fun findGroupVoteAndSurveyOfUser(userEmail: String): ResponseEntity<List<OverallDetailDto>> {
+        val userStudentId: Int = userRepository.findByEmail(userEmail).studentId
+        val userBox: UserBox = userBoxRepository.findByEmail(userEmail)
+        val detailDtoList: MutableList<OverallDetailDto> = mutableListOf()
+        userBox.groups.forEach { groupId ->
+            voteRepository.findAllByGroupId(groupId.toString()).forEach { vote ->
+                if(!(vote.voters != null && vote.voters?.find { it == userStudentId } == null)) {
+                    // have right to this vote
+                    val images: MutableList<ByteArray> = mutableListOf()
+                    vote.images.forEach { photoId ->
+                        images.add(photoService.getPhoto(photoId).data)
+                    }
+                    detailDtoList.add(vote.toOverallDetailDto(
+                        _images = images,
+                        _isAvailable = userBox.votes.find { it == vote.id } == null
+                    ))
+                }
+            }
+            surveyRepository.findAllByGroupId(groupId.toString()).forEach { survey ->
+                if(!(survey.targets != null && survey.targets?.find { it == userStudentId } == null)) {
+                    // have right to this survey
+                    val images: MutableList<ByteArray> = mutableListOf()
+                    survey.images.forEach { photoId ->
+                        images.add(photoService.getPhoto(photoId).data)
+                    }
+                    detailDtoList.add(survey.toOverallDetailDto(
+                        _images = images,
+                        _isAvailable = userBox.surveys.find { it == survey.id } == null
+                    ))
+                }
+            }
+        }
+
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                detailDtoList
             )
     }
 

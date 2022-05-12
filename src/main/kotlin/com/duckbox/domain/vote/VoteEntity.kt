@@ -1,5 +1,8 @@
 package com.duckbox.domain.vote
 
+import com.duckbox.domain.survey.Question
+import com.duckbox.domain.survey.QuestionType
+import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.vote.VoteDetailDto
 import org.bson.types.Binary
 import org.bson.types.ObjectId
@@ -33,6 +36,17 @@ class VoteEntity (
         return VoteDetailDto(
             id = id.toString(), // change ObjectId to String
             title, content, isGroup, groupId, owner, startTime, finishTime, status, _images, candidates, voters, reward
+        )
+    }
+
+    fun toOverallDetailDto(_images: List<ByteArray>, _isAvailable: Boolean): OverallDetailDto {
+        val questions: List<Question> = listOf(Question(type = QuestionType.MULTI, question = title, candidates = candidates))
+        return OverallDetailDto(
+            id = id.toString(), // change ObjectId to String
+            title, content, groupId!!, owner, startTime, finishTime, status, _images,
+            questions, voters, reward,
+            isVote = true,
+            isAvailable = _isAvailable
         )
     }
 }

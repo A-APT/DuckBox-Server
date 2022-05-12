@@ -1,6 +1,7 @@
 package com.duckbox.domain.survey
 
 import com.duckbox.domain.vote.BallotStatus
+import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.survey.SurveyDetailDto
 import org.bson.types.ObjectId
 import org.springframework.data.mongodb.core.mapping.Document
@@ -33,6 +34,16 @@ class SurveyEntity (
         return SurveyDetailDto(
             id = id.toString(), // change ObjectId to String
             title, content, isGroup, groupId, owner, startTime, finishTime, status, _images, questions, targets, reward
+        )
+    }
+
+    fun toOverallDetailDto(_images: List<ByteArray>, _isAvailable: Boolean): OverallDetailDto {
+        return OverallDetailDto(
+            id = id.toString(), // change ObjectId to String
+            title, content, groupId!!, owner, startTime, finishTime, status, _images,
+            questions, targets, reward,
+            isVote = false,
+            isAvailable = _isAvailable,
         )
     }
 }

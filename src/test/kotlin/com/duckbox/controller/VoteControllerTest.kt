@@ -16,6 +16,7 @@ import com.duckbox.dto.user.RegisterDto
 import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
 import com.duckbox.dto.BlindSigToken
+import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.service.GroupService
 import com.duckbox.service.UserService
 import com.duckbox.service.VoteService
@@ -228,6 +229,56 @@ class VoteControllerTest {
             }
     }
 
+    @Test
+    fun is_findVoteById_works_no_authToken_header() {
+        // arrange
+        val invalidId: String = ObjectId().toString()
+        val httpEntity = HttpEntity(null, HttpHeaders())
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/vote/$invalidId", HttpMethod.GET, httpEntity, Unit::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_findVoteById_works_well() {
+        // arrange
+        val token: String = registerAndLogin() // register user
+        val httpHeaders = HttpHeaders()
+        httpHeaders["Authorization"] = "Bearer $token"
+        val groupId: String = registerMockGroup() // register group
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(isGroup = true, groupId = groupId)
+        val voteId: String = voteService.registerVote(mockUserEmail, mockDto).body!! // register vote
+
+        val httpEntity = HttpEntity(null, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/vote/$voteId", HttpMethod.GET, httpEntity, VoteDetailDto::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.OK)
+            }
+    }
+
+    @Test
+    fun is_findVoteById_throws_invalid_voteId() {
+        // arrange
+        val token: String = registerAndLogin() // register user
+        val httpHeaders = HttpHeaders()
+        httpHeaders["Authorization"] = "Bearer $token"
+        val httpEntity = HttpEntity<String>(null, httpHeaders)
+        val invalidId: String = ObjectId().toString()
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/vote/${invalidId}", HttpMethod.GET, httpEntity, NotFoundException::class.java)
+            .apply {
+                assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
 
     @Test
     fun is_generateVoteToken_works_no_authToken_header() {

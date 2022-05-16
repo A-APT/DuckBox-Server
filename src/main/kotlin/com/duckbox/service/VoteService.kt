@@ -96,6 +96,26 @@ class VoteService (
             )
     }
 
+    fun findVoteById(voteId: String): ResponseEntity<VoteDetailDto> {
+        lateinit var vote: VoteEntity
+        runCatching {
+            voteRepository.findById(ObjectId(voteId)).get()
+        }.onSuccess {
+            vote = it
+        }.onFailure {
+            throw NotFoundException("Invalid VoteId: [${voteId}]")
+        }
+        val images: MutableList<ByteArray> = mutableListOf()
+        vote.images.forEach { photoId ->
+            images.add(photoService.getPhoto(photoId).data)
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                vote.toVoteDetailDto(images)
+            )
+    }
+
     fun findVotesOfGroup(_groupId: String): ResponseEntity<List<VoteDetailDto>> {
         val groupId: ObjectId = ObjectId(_groupId) // invalid group returns 0 size voteList
         val voteList: MutableList<VoteDetailDto> = mutableListOf()

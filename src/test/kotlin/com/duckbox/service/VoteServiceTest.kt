@@ -264,6 +264,37 @@ class VoteServiceTest {
     }
 
     @Test
+    fun is_findVoteById_works_ok() {
+        // arrange
+        registerMockUser()
+        val binaryFile: ByteArray = "test file!".toByteArray()
+        val mockDto: VoteRegisterDto = mockVoteRegisterDto.copy(images = listOf(binaryFile))
+        val voteId: String = voteService.registerVote(mockUserEmail, mockDto).body!!
+
+        // act
+        val voteDetailDto: VoteDetailDto = voteService.findVoteById(voteId).body!!
+
+        // assert
+        assertThat(voteDetailDto.id).isEqualTo(voteId)
+        assertThat(voteDetailDto.images[0]).isEqualTo(binaryFile)
+    }
+
+    @Test
+    fun is_findVoteById_throws_when_invalid_voteId() {
+        val invalidId: String = ObjectId().toString()
+
+        // act & assert
+        runCatching {
+            voteService.findVoteById(invalidId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException)
+            assertThat(it.message).isEqualTo("Invalid VoteId: [${invalidId}]")
+        }
+    }
+
+    @Test
     fun is_generateBlindSigVoteToken_works_well() {
         // arrange
         registerMockUser()

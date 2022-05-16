@@ -443,6 +443,57 @@ class GroupControllerTest {
     }
 
     @Test
+    fun is_findGroupById_works_no_headers_token() {
+        // act, assert
+        val invalidId: String = ObjectId().toString()
+        restTemplate
+            .getForEntity("${baseAddress}/api/v1/group/$invalidId", Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_findGroupById_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val httpEntity = HttpEntity(null, httpHeaders)
+
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        mockDto.profile = "profile file!".toByteArray()
+        mockDto.header = "header file!".toByteArray()
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/$groupId", HttpMethod.GET, httpEntity, GroupDetailDto::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
+            }
+    }
+
+    @Test
+    fun is_findGroupById_throws_invalid_groupId() {
+        // arrange
+        val token: String = registerAndLogin()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val httpEntity = HttpEntity(null, httpHeaders)
+        val invalidId: String = ObjectId().toString()
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/$invalidId", HttpMethod.GET, httpEntity, NotFoundException::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
     fun is_findGroupVoteAndSurveyOfUser_throws_when_no_headers_token() {
         // act, assert
         restTemplate

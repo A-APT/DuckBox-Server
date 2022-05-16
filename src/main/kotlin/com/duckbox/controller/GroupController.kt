@@ -45,6 +45,11 @@ class GroupController (
         return ResponseEntity.noContent().build()
     }
 
+    @GetMapping("/api/v1/group/{groupId}")
+    fun findGroupById(@RequestHeader httpHeaders: Map<String, String>, @PathVariable groupId: String): ResponseEntity<GroupDetailDto> {
+        return groupService.findGroupById(groupId)
+    }
+
     @PostMapping("/api/v1/group/member")
     fun joinGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupId: String): ResponseEntity<Unit> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)

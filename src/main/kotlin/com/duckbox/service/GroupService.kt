@@ -61,6 +61,24 @@ class GroupService (
             )
     }
 
+    fun findGroupById(groupId: String): ResponseEntity<GroupDetailDto> {
+        lateinit var groupEntity: GroupEntity
+        runCatching {
+            groupRepository.findById(ObjectId(groupId)).get()
+        }.onSuccess {
+            groupEntity = it
+        }.onFailure {
+            throw NotFoundException("Invalid GroupId: [${groupId}]")
+        }
+        val profile: ByteArray? = if(groupEntity.profile != null) photoService.getPhoto(groupEntity.profile!!).data else null
+        val header: ByteArray? = if(groupEntity.header != null) photoService.getPhoto(groupEntity.header!!).data else null
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                groupEntity.toGroupDetailDto(profile, header)
+            )
+    }
+
     fun findGroupVoteAndSurveyOfUser(userEmail: String): ResponseEntity<List<OverallDetailDto>> {
         val userStudentId: Int = userRepository.findByEmail(userEmail).studentId
         val userBox: UserBox = userBoxRepository.findByEmail(userEmail)

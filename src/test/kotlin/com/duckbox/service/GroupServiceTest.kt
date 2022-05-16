@@ -471,6 +471,40 @@ class GroupServiceTest {
     }
 
     @Test
+    fun is_findGroupById_works_well() {
+        // arrange
+        registerMockUser()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        mockDto.profile = "profile file!".toByteArray()
+        mockDto.header = "header file!".toByteArray()
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+
+        // act
+        val groupDetailDto: GroupDetailDto = groupService.findGroupById(groupId).body!!
+
+        // assert
+        assertThat(groupDetailDto.profile).isEqualTo(mockDto.profile)
+        assertThat(groupDetailDto.header).isEqualTo(mockDto.header)
+    }
+
+    @Test
+    fun is_findGroupById_throws_invalid_groupId() {
+        // arrange
+        registerMockUser()
+        val invalidId: String = ObjectId().toString()
+
+        // act & assert
+        runCatching {
+            groupService.findGroupById(invalidId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException)
+            assertThat(it.message).isEqualTo("Invalid GroupId: [${invalidId}]")
+        }
+    }
+
+    @Test
     fun is_findGroupVoteAndSurveyOfUser_works_well_on_empty() {
         // arrange
         registerMockUser()

@@ -38,7 +38,7 @@ class GroupController (
         return groupService.registerGroup(userEmail, groupRegisterDto)
     }
 
-    @PostMapping("/api/v1/group/detail")
+    @PutMapping("/api/v1/group")
     fun updateGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupUpdateDto: GroupUpdateDto): ResponseEntity<Unit> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
         groupService.updateGroup(userEmail, groupUpdateDto)

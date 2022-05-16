@@ -232,7 +232,7 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group/detail", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.PUT, httpEntity, Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
             }
@@ -276,7 +276,7 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group/detail", HttpMethod.POST, httpEntity, Unit::class.java)
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.PUT, httpEntity, Unit::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
             }
@@ -298,7 +298,7 @@ class GroupControllerTest {
 
         // act, assert
         restTemplate
-            .exchange("${baseAddress}/api/v1/group/detail", HttpMethod.POST, httpEntity, NotFoundException::class.java)
+            .exchange("${baseAddress}/api/v1/group", HttpMethod.PUT, httpEntity, NotFoundException::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
             }

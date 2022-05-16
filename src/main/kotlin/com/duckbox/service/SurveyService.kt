@@ -92,6 +92,26 @@ class SurveyService (
             )
     }
 
+    fun findSurveyById(surveyId: String): ResponseEntity<SurveyDetailDto> {
+        lateinit var survey: SurveyEntity
+        runCatching {
+            surveyRepository.findById(ObjectId(surveyId)).get()
+        }.onSuccess {
+            survey = it
+        }.onFailure {
+            throw NotFoundException("Invalid SurveyId: [${surveyId}]")
+        }
+        val images: MutableList<ByteArray> = mutableListOf()
+        survey.images.forEach { photoId ->
+            images.add(photoService.getPhoto(photoId).data)
+        }
+        return ResponseEntity
+            .status(HttpStatus.OK)
+            .body(
+                survey.toSurveyDetailDto(images)
+            )
+    }
+
     fun findSurveysOfGroup(_groupId: String): ResponseEntity<List<SurveyDetailDto>> {
         val groupId: ObjectId = ObjectId(_groupId)
         val surveyList: MutableList<SurveyDetailDto> = mutableListOf()

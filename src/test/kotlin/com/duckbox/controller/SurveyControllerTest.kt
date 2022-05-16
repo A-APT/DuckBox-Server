@@ -16,6 +16,7 @@ import com.duckbox.dto.user.RegisterDto
 import com.duckbox.dto.survey.SurveyDetailDto
 import com.duckbox.dto.survey.SurveyRegisterDto
 import com.duckbox.dto.user.BlingSigRequestDto
+import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.service.GroupService
 import com.duckbox.service.SurveyService
 import com.duckbox.service.UserService
@@ -238,6 +239,56 @@ class SurveyControllerTest {
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
                 Assertions.assertThat(body!!.size).isEqualTo(0)
+            }
+    }
+
+    @Test
+    fun is_findSurveyById_works_no_headers() {
+        val invalidId: String = ObjectId().toString()
+
+        // act, assert
+        restTemplate
+            .getForEntity("${baseAddress}/api/v1/survey/$invalidId", Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_findSurveyById_works_well() {
+        // arrange
+        val token: String = registerAndLogin() // register user
+        val httpHeaders = HttpHeaders()
+        httpHeaders["Authorization"] = "Bearer $token"
+        val groupId: String = registerMockGroup() // register group
+        val mockDto: SurveyRegisterDto = mockSurveyRegisterDto.copy(isGroup = true, groupId = groupId)
+        val surveyId: String = surveyService.registerSurvey(mockUserEmail, mockDto).body!! // register survey
+
+        val httpEntity = HttpEntity(null, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/survey/$surveyId", HttpMethod.GET, httpEntity, SurveyDetailDto::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.OK)
+            }
+    }
+
+    @Test
+    fun is_findSurveyById_throws_on_invalid_surveyId() {
+        // arrange
+        val token: String = registerAndLogin() // register user
+        val httpHeaders = HttpHeaders()
+        httpHeaders["Authorization"] = "Bearer $token"
+        val httpEntity = HttpEntity<String>(null, httpHeaders)
+
+        val invalidId: String = ObjectId().toString()
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/survey/$invalidId", HttpMethod.GET, httpEntity, NotFoundException::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
             }
     }
     

@@ -247,6 +247,38 @@ class SurveyServiceTest {
         // assert
         assertThat(surveyList.size).isEqualTo(0)
     }
+
+    @Test
+    fun is_findSurveyById_works_ok() {
+        // arrange
+        registerMockUser()
+        val binaryFile: ByteArray = "test file!".toByteArray()
+        val mockDto: SurveyRegisterDto = mockSurveyRegisterDto.copy(images = listOf(binaryFile))
+        val surveyId: String = surveyService.registerSurvey(mockUserEmail, mockDto).body!!
+
+        // act
+        val surveyDetailDto: SurveyDetailDto = surveyService.findSurveyById(surveyId).body!!
+
+        // assert
+        assertThat(surveyDetailDto.id).isEqualTo(surveyId)
+        assertThat(surveyDetailDto.images[0]).isEqualTo(binaryFile)
+    }
+
+    @Test
+    fun is_findSurveyById_throws_on_invalid_surveyId() {
+        // arrange
+        val invalidId: String = ObjectId().toString()
+
+        // act & assert
+        runCatching {
+            surveyService.findSurveyById(invalidId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Invalid SurveyId: [${invalidId}]")
+        }
+    }
     
     @Test
     fun is_generateBlindSigSurveyToken_works_well() {

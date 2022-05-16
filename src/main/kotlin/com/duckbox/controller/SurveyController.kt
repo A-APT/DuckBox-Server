@@ -4,6 +4,7 @@ import com.duckbox.dto.BlindSigToken
 import com.duckbox.dto.survey.SurveyDetailDto
 import com.duckbox.dto.survey.SurveyRegisterDto
 import com.duckbox.dto.user.BlingSigRequestDto
+import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.security.JWTTokenProvider
 import com.duckbox.service.SurveyService
 import org.springframework.http.ResponseEntity
@@ -23,6 +24,11 @@ class SurveyController (
     @GetMapping("/api/v1/survey")
     fun getAllSurvey(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<List<SurveyDetailDto>> {
         return surveyService.getAllSurvey()
+    }
+
+    @GetMapping("/api/v1/survey/{surveyId}")
+    fun findSurveyById(@RequestHeader httpHeaders: Map<String, String>, @PathVariable surveyId: String): ResponseEntity<SurveyDetailDto> {
+        return surveyService.findSurveyById(surveyId)
     }
 
     @GetMapping("/api/v1/survey/group/{groupId}")

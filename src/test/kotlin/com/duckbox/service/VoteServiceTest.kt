@@ -19,6 +19,7 @@ import com.duckbox.dto.BlindSigToken
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,6 +62,8 @@ class VoteServiceTest {
     @Autowired
     private lateinit var blindSecp256k1: BlindSecp256k1
 
+    private var mockFcmService: FCMService = mockk(relaxed = true)
+
     private val mockVoteRegisterDto: VoteRegisterDto = MockDto.mockVoteRegisterDto
     private val mockUserEmail = "email@konkuk.ac.kr"
     private val mockUserEmail2 = "email_2@konkuk.ac.kr"
@@ -74,6 +77,15 @@ class VoteServiceTest {
         userRepository.deleteAll()
         userBoxRepository.deleteAll()
         groupRepository.deleteAll()
+        setFCMService() // set fcmService to mockFcmService
+    }
+
+    // Set private fcmService
+    private fun setFCMService() {
+        VoteService::class.java.getDeclaredField("fcmService").apply {
+            isAccessible = true
+            set(voteService, mockFcmService)
+        }
     }
 
     fun registerMockUser() {
@@ -86,7 +98,8 @@ class VoteServiceTest {
                 phoneNumber = "01012341234",
                 nickname = "duck",
                 college = "ku",
-                department = listOf("computer", "software")
+                department = listOf("computer", "software"),
+                fcmToken = "temp",
             )
         )
     }
@@ -101,7 +114,8 @@ class VoteServiceTest {
                 phoneNumber = "01012341234",
                 nickname = "duck!",
                 college = "ku",
-                department = listOf("computer", "software")
+                department = listOf("computer", "software"),
+                fcmToken = "temp",
             )
         )
     }

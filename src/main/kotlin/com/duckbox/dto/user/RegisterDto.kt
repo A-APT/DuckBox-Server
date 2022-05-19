@@ -8,5 +8,6 @@ data class RegisterDto (
     val phoneNumber: String?,
     val nickname: String,
     val college: String,
-    val department: List<String>
+    val department: List<String>,
+    val fcmToken: String,
 )

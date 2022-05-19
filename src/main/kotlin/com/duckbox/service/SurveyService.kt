@@ -10,6 +10,7 @@ import com.duckbox.domain.user.UserRepository
 import com.duckbox.domain.vote.BallotStatus
 import com.duckbox.domain.vote.VoteEntity
 import com.duckbox.dto.BlindSigToken
+import com.duckbox.dto.notification.NotificationMessage
 import com.duckbox.dto.survey.SurveyDetailDto
 import com.duckbox.dto.survey.SurveyRegisterDto
 import com.duckbox.dto.user.BlingSigRequestDto
@@ -27,6 +28,7 @@ import java.math.BigInteger
 class SurveyService (
     private val surveyRepository: SurveyRepository,
     private val photoService: PhotoService,
+    private val fcmService: FCMService,
     private val userRepository: UserRepository,
     private val userBoxRepository: UserBoxRepository,
     private val groupRepository: GroupRepository,
@@ -34,9 +36,12 @@ class SurveyService (
 ){
     fun registerSurvey(userEmail: String, surveyRegisterDto: SurveyRegisterDto): ResponseEntity<String> {
         val owner: String = userRepository.findByEmail(userEmail).nickname
+        var groupName: String = ""
         if (surveyRegisterDto.isGroup) { // check groupId is valid
             runCatching {
                 groupRepository.findById(ObjectId(surveyRegisterDto.groupId)).get()
+            }.onSuccess {
+                groupName = it.name
             }.onFailure {
                 throw NotFoundException("Invalid GroupId: [${surveyRegisterDto.groupId}]")
             }
@@ -67,6 +72,18 @@ class SurveyService (
                 reward = surveyRegisterDto.reward
             )
         ).id
+
+        if (surveyRegisterDto.notice) {
+            // TODO
+            // notice to voters
+        }
+
+        if (surveyRegisterDto.isGroup) {
+            fcmService.sendNotification(
+                NotificationMessage(target = surveyRegisterDto.groupId!!, id = id.toString(), title = groupName, type = 2),
+                isTopic = true
+            )
+        }
 
         return ResponseEntity
             .status(HttpStatus.OK)

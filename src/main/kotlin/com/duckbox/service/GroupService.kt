@@ -12,8 +12,10 @@ import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
+import com.duckbox.dto.notification.NotificationMessage
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.NotFoundException
+import com.google.firebase.messaging.FirebaseMessaging
 import org.bson.types.ObjectId
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -24,6 +26,7 @@ class GroupService (
     private val groupRepository: GroupRepository,
     private val photoService: PhotoService,
     private val userService: UserService,
+    private val fcmService: FCMService,
     private val userRepository: UserRepository,
     private val userBoxRepository: UserBoxRepository,
     private val voteRepository: VoteRepository,
@@ -156,6 +159,10 @@ class GroupService (
             userBoxRepository.save(this)
         }
 
+        // subscribe to group's topic
+        val fcmToken: String = userRepository.findByEmail(userEmail).fcmToken
+        FirebaseMessaging.getInstance().subscribeToTopic(listOf(fcmToken), id.toString())
+
         return ResponseEntity
             .status(HttpStatus.OK)
             .body(
@@ -226,5 +233,11 @@ class GroupService (
             .body(
                 groupDtoList
             )
+    }
+
+    fun testNotification(userEmail: String) {
+        val fcmToken: String = userRepository.findByEmail(userEmail).fcmToken
+        val message = NotificationMessage(target = fcmToken, id = "groupId", title = "group", type = 0)
+        fcmService.sendNotification(message, false)
     }
 }

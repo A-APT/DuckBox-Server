@@ -62,7 +62,8 @@ class VoteSchedulerTest {
         userRepository.save(User(
             did = "", studentId = 1, name = "", password = "", email = mockUserEmail,
             phoneNumber = "", nickname = "", college = "", department = listOf(),
-            roles = setOf("ROLE_USER")
+            roles = setOf("ROLE_USER"),
+            fcmToken = "temp",
         ))
     }
 

@@ -17,9 +17,11 @@ import com.duckbox.dto.vote.VoteDetailDto
 import com.duckbox.dto.vote.VoteRegisterDto
 import com.duckbox.dto.BlindSigToken
 import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.service.FCMService
 import com.duckbox.service.GroupService
 import com.duckbox.service.UserService
 import com.duckbox.service.VoteService
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
@@ -73,6 +75,8 @@ class VoteControllerTest {
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
 
+    private var mockFcmService: FCMService = mockk(relaxed = true)
+
     private val mockVoteRegisterDto: VoteRegisterDto = MockDto.mockVoteRegisterDto
     private val mockUserEmail = "email@konkuk.ac.kr"
 
@@ -85,6 +89,15 @@ class VoteControllerTest {
         userBoxRepository.deleteAll()
         photoRepository.deleteAll()
         groupRepository.deleteAll()
+        setFCMService() // set fcmService to mockFcmService
+    }
+
+    // Set private fcmService
+    private fun setFCMService() {
+        VoteService::class.java.getDeclaredField("fcmService").apply {
+            isAccessible = true
+            set(voteService, mockFcmService)
+        }
     }
 
     fun registerAndLogin(): String {
@@ -97,7 +110,8 @@ class VoteControllerTest {
                 phoneNumber = "01012341234",
                 nickname = "duck",
                 college = "ku",
-                department = listOf("computer", "software")
+                department = listOf("computer", "software"),
+                fcmToken = "temp",
             )
         )
         return userService.login(

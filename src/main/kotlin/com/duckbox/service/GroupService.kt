@@ -12,6 +12,7 @@ import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.dto.notification.NotificationMessage
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.NotFoundException
+import com.google.firebase.messaging.FirebaseMessaging
 import org.bson.types.ObjectId
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -94,6 +95,10 @@ class GroupService (
             groups.add(id)
             userBoxRepository.save(this)
         }
+
+        // subscribe to group's topic
+        val fcmToken: String = userRepository.findByEmail(userEmail).fcmToken
+        FirebaseMessaging.getInstance().subscribeToTopic(listOf(fcmToken), id.toString())
 
         return ResponseEntity
             .status(HttpStatus.OK)

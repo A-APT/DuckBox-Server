@@ -22,7 +22,7 @@ class BallotServiceTest {
     private lateinit var hashUtils: HashUtils
 
     private val did = "did.test"
-    private val ballotId = "ballot2"
+    private val ballotId = "ballot3"
 
     //@Test
     fun is_registerBallot_works_well() {
@@ -47,5 +47,11 @@ class BallotServiceTest {
     //Test
     fun is_close_ballot_works_well() {
         ballotService.close(ballotId, 0)
+    }
+
+    //@Test
+    fun is_resultOfBallot_works_well() {
+        val result: List<BigInteger> = ballotService.resultOfBallot(ballotId)
+        assertThat(result.size).isEqualTo(2)
     }
 }

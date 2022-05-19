@@ -54,15 +54,20 @@ class BallotService(private val ethereumService: EthereumService) {
         ethereumService.ethSendRaw(contractAddress, OPEN, inputParams, outputParams)
     }
 
-    fun close(ballotId: String, totalNum: Int): String? {
+    fun close(ballotId: String, totalNum: Int) {
         val inputParams = listOf<Type<*>>(Utf8String(ballotId), Uint256(totalNum.toLong()))
         val outputParams = listOf<TypeReference<*>>()
-        return ethereumService.ethCall(contractAddress, CLOSE, inputParams, outputParams) as String?
+        ethereumService.ethCall(contractAddress, CLOSE, inputParams, outputParams)
     }
 
-    fun resultOfBallot(ballotId: String) {
+    fun resultOfBallot(ballotId: String): List<BigInteger> {
         val inputParams = listOf<Type<*>>(Utf8String(ballotId))
-        val outputParams = listOf<TypeReference<*>>() // TODO
-        ethereumService.ethSendRaw(contractAddress, RESULT, inputParams, outputParams)
+        val outputParams = listOf<TypeReference<*>>(object: TypeReference<DynamicArray<Uint>>() {})
+        val decoded: List<Type<*>> = ethereumService.ethCall(contractAddress, RESULT, inputParams, outputParams)!!
+        val result: MutableList<BigInteger> = mutableListOf()
+        (decoded[0].value as List<Uint>).forEach {
+            result.add(it.value)
+        }
+        return result
     }
 }

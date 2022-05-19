@@ -8,6 +8,7 @@ import org.web3j.abi.FunctionEncoder
 import org.web3j.abi.FunctionReturnDecoder
 import org.web3j.abi.TypeReference
 import org.web3j.abi.datatypes.Type
+import org.web3j.abi.datatypes.Uint
 import org.web3j.crypto.Credentials
 import org.web3j.protocol.Web3j
 import org.web3j.protocol.core.DefaultBlockParameterName
@@ -36,7 +37,7 @@ class EthereumService(private val web3j: Web3j) {
     val gasPrice: BigInteger = web3j.ethGasPrice().sendAsync().get().gasPrice
     val gasLimit: BigInteger = BigInteger.valueOf(800000) // gasLimit (ropsten)
 
-    fun ethCall(contractAddress: String, functionName: String, inputParams: List<Type<*>>, outputParams: List<TypeReference<*>>): Any? {
+    fun ethCall(contractAddress: String, functionName: String, inputParams: List<Type<*>>, outputParams: List<TypeReference<*>>): List<Type<*>>? {
         // generate function
         val function = org.web3j.abi.datatypes.Function(functionName, inputParams, outputParams)
         val encodedFunction = FunctionEncoder.encode(function)
@@ -51,9 +52,9 @@ class EthereumService(private val web3j: Web3j) {
         }
 
         // decode response
-        val decode = FunctionReturnDecoder.decode(ethCall.result, function.outputParameters)
+        val decode: List<Type<*>> = FunctionReturnDecoder.decode(ethCall.result, function.outputParameters)
         //print("ethcCall result ${ethCall.result} / value: ${decode[0].value} / type: ${decode[0].typeAsString}")
-        return if (decode.size > 0) decode[0].value else null
+        return if (decode.isNotEmpty()) decode else null
     }
 
     fun ethSend(contractAddress: String, functionName: String, inputParams: List<Type<*>>, outputParams: List<TypeReference<*>>): Any? {

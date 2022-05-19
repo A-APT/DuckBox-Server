@@ -34,6 +34,6 @@ class DIdService(private val ethereumService: EthereumService) {
     fun getOwner(): String? {
         val inputParams = listOf<Type<*>>()
         val outputParams = listOf<TypeReference<*>>(object: TypeReference<Address>() {})
-        return ethereumService.ethCall(contractAddress, "owner", inputParams, outputParams) as String?
+        return ethereumService.ethCall(contractAddress, "owner", inputParams, outputParams)!![0].value as String?
     }
 }

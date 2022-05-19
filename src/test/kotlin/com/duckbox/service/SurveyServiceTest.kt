@@ -19,6 +19,7 @@ import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
+import io.mockk.mockk
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.bson.types.ObjectId
@@ -61,6 +62,8 @@ class SurveyServiceTest {
     @Autowired
     private lateinit var blindSecp256k1: BlindSecp256k1
 
+    private var mockFcmService: FCMService = mockk(relaxed = true)
+
     private val mockSurveyRegisterDto: SurveyRegisterDto = MockDto.mockSurveyRegisterDto
     private val mockUserEmail = "email@konkuk.ac.kr"
     private val mockUserEmail2 = "email_2@konkuk.ac.kr"
@@ -74,6 +77,15 @@ class SurveyServiceTest {
         userRepository.deleteAll()
         userBoxRepository.deleteAll()
         groupRepository.deleteAll()
+        setFCMService() // set fcmService to mockFcmService
+    }
+
+    // Set private fcmService
+    private fun setFCMService() {
+        SurveyService::class.java.getDeclaredField("fcmService").apply {
+            isAccessible = true
+            set(surveyService, mockFcmService)
+        }
     }
 
     fun registerMockUser() {

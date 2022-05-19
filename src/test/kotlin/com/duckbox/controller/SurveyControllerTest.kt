@@ -16,9 +16,11 @@ import com.duckbox.dto.user.RegisterDto
 import com.duckbox.dto.survey.SurveyDetailDto
 import com.duckbox.dto.survey.SurveyRegisterDto
 import com.duckbox.dto.user.BlingSigRequestDto
+import com.duckbox.service.FCMService
 import com.duckbox.service.GroupService
 import com.duckbox.service.SurveyService
 import com.duckbox.service.UserService
+import io.mockk.mockk
 import org.assertj.core.api.Assertions
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
@@ -75,6 +77,8 @@ class SurveyControllerTest {
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
 
+    private var mockFcmService: FCMService = mockk(relaxed = true)
+
     private val mockSurveyRegisterDto: SurveyRegisterDto = MockDto.mockSurveyRegisterDto
     private val mockUserEmail = "email@konkuk.ac.kr"
 
@@ -87,6 +91,15 @@ class SurveyControllerTest {
         userBoxRepository.deleteAll()
         photoRepository.deleteAll()
         groupRepository.deleteAll()
+        setFCMService() // set fcmService to mockFcmService
+    }
+
+    // Set private fcmService
+    private fun setFCMService() {
+        SurveyService::class.java.getDeclaredField("fcmService").apply {
+            isAccessible = true
+            set(surveyService, mockFcmService)
+        }
     }
 
     fun registerAndLogin(): String {

@@ -169,7 +169,7 @@ class GroupService (
 
     fun testNotification(userEmail: String) {
         val fcmToken: String = userRepository.findByEmail(userEmail).fcmToken
-        val message = NotificationMessage(target = fcmToken, title = "group", message = "groupId")
+        val message = NotificationMessage(target = fcmToken, id = "groupId", title = "group", type = 0)
         fcmService.sendNotification(message, false)
     }
 }

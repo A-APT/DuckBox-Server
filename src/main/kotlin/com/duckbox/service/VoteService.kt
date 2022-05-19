@@ -35,9 +35,12 @@ class VoteService (
 
     fun registerVote(userEmail: String, voteRegisterDto: VoteRegisterDto): ResponseEntity<String> {
         val owner: String = userRepository.findByEmail(userEmail).nickname
+        var groupName: String = ""
         if (voteRegisterDto.isGroup) { // check groupId is valid
             runCatching {
                 groupRepository.findById(ObjectId(voteRegisterDto.groupId)).get()
+            }.onSuccess {
+                groupName = it.name
             }.onFailure {
                 throw NotFoundException("Invalid GroupId: [${voteRegisterDto.groupId}]")
             }
@@ -76,7 +79,7 @@ class VoteService (
 
         if (voteRegisterDto.isGroup) {
             fcmService.sendNotification(
-                NotificationMessage(target = voteRegisterDto.groupId!!, title = "vote", message = voteRegisterDto.groupId!!),
+                NotificationMessage(target = voteRegisterDto.groupId!!, id = id.toString(), title = groupName, type = 1),
                 isTopic = true
             )
         }

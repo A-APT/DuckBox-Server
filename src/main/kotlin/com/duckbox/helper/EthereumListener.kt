@@ -65,8 +65,9 @@ class EthereumListener(
 
             // send notification to user
             val fcmToken: String = userRepository.findByDid(did).fcmToken
+            val groupName: String = groupRepository.findById(ObjectId(groupId)).get().name
             fcmService.sendNotification(
-                notification = NotificationMessage(target = fcmToken, title = "group", message = groupId),
+                notification = NotificationMessage(target = fcmToken, id = groupId, title = groupName, type = 0),
                 isTopic = false
             )
 

@@ -23,11 +23,11 @@ class VoteScheduler (
         val openVoteList: MutableList<VoteEntity> = voteRepository.findAllByStatus(BallotStatus.OPEN)
         openVoteList.forEach {
             if (it.finishTime <= now) {
-                it.status = BallotStatus.FINISHED
-                voteRepository.save(it)
-
                 // to ethereum
                 ballotService.close(it.id.toString(), it.voteNum)
+
+                it.status = BallotStatus.FINISHED
+                voteRepository.save(it)
             }
         }
 
@@ -35,11 +35,11 @@ class VoteScheduler (
         val registeredVoteList: MutableList<VoteEntity> = voteRepository.findAllByStatus(BallotStatus.REGISTERED)
         registeredVoteList.forEach {
             if (it.startTime <= now) {
-                it.status = BallotStatus.OPEN
-                voteRepository.save(it)
-
                 // to ethereum
                 ballotService.open(it.id.toString())
+
+                it.status = BallotStatus.OPEN
+                voteRepository.save(it)
             }
         }
     }

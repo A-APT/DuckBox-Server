@@ -101,6 +101,7 @@ class GroupControllerTest {
             college = "ku",
             department = listOf("computer", "software"),
             fcmToken = "temp",
+            address = "0x11",
         ))
         return userService.login(
             LoginRequestDto(email = mockUserEmail, password = "test")
@@ -119,6 +120,7 @@ class GroupControllerTest {
                 college = "ku",
                 department = listOf("computer", "software"),
                 fcmToken = "temp",
+                address = "0x11",
             )
         )
     }

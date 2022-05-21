@@ -10,4 +10,5 @@ data class RegisterDto (
     val college: String,
     val department: List<String>,
     val fcmToken: String,
+    val address: String,
 )

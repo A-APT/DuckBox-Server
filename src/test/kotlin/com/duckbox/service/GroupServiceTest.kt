@@ -90,6 +90,7 @@ class GroupServiceTest {
                 college = "ku",
                 department = listOf("computer", "software"),
                 fcmToken = "temp",
+                address = "0x11",
             )
         )
     }
@@ -106,6 +107,7 @@ class GroupServiceTest {
                 college = "ku",
                 department = listOf("computer", "software"),
                 fcmToken = "temp",
+                address = "0x11",
             )
         )
     }
@@ -328,6 +330,7 @@ class GroupServiceTest {
                 college = "ku",
                 department = listOf("computer", "software"),
                 fcmToken = "temp",
+                address = "0x11",
             )
         )
 

@@ -19,10 +19,10 @@ class DIdService(private val ethereumService: EthereumService) {
     private final val REGISTER = "registerId"
     private final val UNREGISTER = "removeId"
 
-    fun registerDid(address: String, did: String): Boolean? {
+    fun registerDid(address: String, did: String) {
         val inputParams = listOf<Type<*>>(Address(address), Bytes32(DatatypeConverter.parseHexBinary(did)))
         val outputParams = listOf<TypeReference<*>>()
-        return ethereumService.ethSendRaw(contractAddress, REGISTER, inputParams, outputParams) as Boolean?
+        ethereumService.ethSendRaw(contractAddress, REGISTER, inputParams, outputParams)
     }
 
     fun removeDid(address: String) {

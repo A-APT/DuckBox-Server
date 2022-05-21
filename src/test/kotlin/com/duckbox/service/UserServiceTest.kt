@@ -18,6 +18,9 @@ import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.security.JWTTokenProvider
+import com.duckbox.service.ethereum.DIdService
+import io.mockk.mockk
+import io.mockk.mockkConstructor
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.bson.types.ObjectId
@@ -51,6 +54,8 @@ class UserServiceTest {
     @Autowired
     private lateinit var jwtTokenProvider: JWTTokenProvider
 
+    private lateinit var mockDidService: DIdService
+
     private val mockRegisterDto: RegisterDto = MockDto.mockRegisterDto
 
     @BeforeEach
@@ -59,6 +64,17 @@ class UserServiceTest {
         userRepository.deleteAll()
         userBoxRepository.deleteAll()
         groupRepository.deleteAll()
+        mockkConstructor(DIdService::class)
+        mockDidService = mockk(relaxed = true)
+        setDidService(mockDidService)
+    }
+
+    // Set ballotService
+    private fun setDidService(didService: DIdService) {
+        UserService::class.java.getDeclaredField("didService").apply {
+            isAccessible = true
+            set(userService, didService)
+        }
     }
 
     @Test

@@ -112,6 +112,7 @@ class VoteControllerTest {
                 college = "ku",
                 department = listOf("computer", "software"),
                 fcmToken = "temp",
+                address = "0x11",
             )
         )
         return userService.login(

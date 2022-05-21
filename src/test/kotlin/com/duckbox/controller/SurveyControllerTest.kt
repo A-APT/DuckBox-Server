@@ -21,7 +21,9 @@ import com.duckbox.service.FCMService
 import com.duckbox.service.GroupService
 import com.duckbox.service.SurveyService
 import com.duckbox.service.UserService
+import com.duckbox.service.ethereum.DIdService
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import org.assertj.core.api.Assertions
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
@@ -78,6 +80,8 @@ class SurveyControllerTest {
     @Autowired
     private lateinit var restTemplate: TestRestTemplate
 
+    private lateinit var mockDidService: DIdService
+
     private var mockFcmService: FCMService = mockk(relaxed = true)
 
     private val mockSurveyRegisterDto: SurveyRegisterDto = MockDto.mockSurveyRegisterDto
@@ -93,6 +97,17 @@ class SurveyControllerTest {
         photoRepository.deleteAll()
         groupRepository.deleteAll()
         setFCMService() // set fcmService to mockFcmService
+        mockkConstructor(DIdService::class)
+        mockDidService = mockk(relaxed = true)
+        setDidService(mockDidService)
+    }
+
+    // Set DidService
+    private fun setDidService(didService: DIdService) {
+        UserService::class.java.getDeclaredField("didService").apply {
+            isAccessible = true
+            set(userService, didService)
+        }
     }
 
     // Set private fcmService

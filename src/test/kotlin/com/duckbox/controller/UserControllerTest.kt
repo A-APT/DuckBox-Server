@@ -73,7 +73,7 @@ class UserControllerTest {
         setDidService(mockDidService)
     }
 
-    // Set ballotService
+    // Set DidService
     private fun setDidService(didService: DIdService) {
         UserService::class.java.getDeclaredField("didService").apply {
             isAccessible = true

@@ -17,6 +17,9 @@ import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.service.ethereum.DIdService
+import io.mockk.mockk
+import io.mockk.mockkConstructor
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,6 +64,7 @@ class GroupServiceTest {
     @Autowired
     private lateinit var surveyService: SurveyService
 
+    private lateinit var mockDidService: DIdService
 
     private val mockGroupRegisterDto: GroupRegisterDto = MockDto.mockGroupRegisterDto
     private val mockUserEmail = "email@konkuk.ac.kr"
@@ -76,6 +80,17 @@ class GroupServiceTest {
         userBoxRepository.deleteAll()
         voteRepository.deleteAll()
         surveyRepository.deleteAll()
+        mockkConstructor(DIdService::class)
+        mockDidService = mockk(relaxed = true)
+        setDidService(mockDidService)
+    }
+
+    // Set DidService
+    private fun setDidService(didService: DIdService) {
+        UserService::class.java.getDeclaredField("didService").apply {
+            isAccessible = true
+            set(userService, didService)
+        }
     }
 
     fun registerMockUser() {

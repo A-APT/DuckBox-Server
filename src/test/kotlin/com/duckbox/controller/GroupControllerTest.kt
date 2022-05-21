@@ -18,6 +18,9 @@ import com.duckbox.service.GroupService
 import com.duckbox.service.SurveyService
 import com.duckbox.service.UserService
 import com.duckbox.service.VoteService
+import com.duckbox.service.ethereum.DIdService
+import io.mockk.mockk
+import io.mockk.mockkConstructor
 import org.assertj.core.api.Assertions
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
@@ -71,6 +74,8 @@ class GroupControllerTest {
     @Autowired
     private lateinit var surveyService: SurveyService
 
+    private lateinit var mockDidService: DIdService
+
     private lateinit var baseAddress: String
 
     private val mockGroupRegisterDto: GroupRegisterDto = MockDto.mockGroupRegisterDto
@@ -87,6 +92,17 @@ class GroupControllerTest {
         userBoxRepository.deleteAll()
         voteRepository.deleteAll()
         surveyRepository.deleteAll()
+        mockkConstructor(DIdService::class)
+        mockDidService = mockk(relaxed = true)
+        setDidService(mockDidService)
+    }
+
+    // Set DidService
+    private fun setDidService(didService: DIdService) {
+        UserService::class.java.getDeclaredField("didService").apply {
+            isAccessible = true
+            set(userService, didService)
+        }
     }
 
     fun registerAndLogin(): String {

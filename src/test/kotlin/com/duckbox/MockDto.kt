@@ -20,6 +20,7 @@ object MockDto {
         college = "ku",
         department = listOf("computer", "software"),
         fcmToken = "temp",
+        address = "0x11",
     )
 
     val mockGroupRegisterDto = GroupRegisterDto(

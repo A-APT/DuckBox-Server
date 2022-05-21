@@ -19,7 +19,9 @@ import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.service.ethereum.DIdService
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.bson.types.ObjectId
@@ -62,6 +64,8 @@ class SurveyServiceTest {
     @Autowired
     private lateinit var blindSecp256k1: BlindSecp256k1
 
+    private lateinit var mockDidService: DIdService
+
     private var mockFcmService: FCMService = mockk(relaxed = true)
 
     private val mockSurveyRegisterDto: SurveyRegisterDto = MockDto.mockSurveyRegisterDto
@@ -78,6 +82,17 @@ class SurveyServiceTest {
         userBoxRepository.deleteAll()
         groupRepository.deleteAll()
         setFCMService() // set fcmService to mockFcmService
+        mockkConstructor(DIdService::class)
+        mockDidService = mockk(relaxed = true)
+        setDidService(mockDidService)
+    }
+
+    // Set DidService
+    private fun setDidService(didService: DIdService) {
+        UserService::class.java.getDeclaredField("didService").apply {
+            isAccessible = true
+            set(userService, didService)
+        }
     }
 
     // Set private fcmService
@@ -100,6 +115,7 @@ class SurveyServiceTest {
                 college = "ku",
                 department = listOf("computer", "software"),
                 fcmToken = "temp",
+                address = "0x11",
             )
         )
     }
@@ -116,6 +132,7 @@ class SurveyServiceTest {
                 college = "ku",
                 department = listOf("computer", "software"),
                 fcmToken = "temp",
+                address = "0x11",
             )
         )
     }

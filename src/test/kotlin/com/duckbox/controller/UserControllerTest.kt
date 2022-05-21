@@ -12,6 +12,9 @@ import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.errors.exception.UnauthorizedException
 import com.duckbox.service.GroupService
 import com.duckbox.service.UserService
+import com.duckbox.service.ethereum.DIdService
+import io.mockk.mockk
+import io.mockk.mockkConstructor
 import org.assertj.core.api.Assertions.assertThat
 import org.bson.types.ObjectId
 import org.junit.jupiter.api.AfterEach
@@ -54,6 +57,8 @@ class UserControllerTest {
 
     private lateinit var baseAddress: String
 
+    private lateinit var mockDidService: DIdService
+
     private val mockRegisterDto: RegisterDto = MockDto.mockRegisterDto
 
     @BeforeEach
@@ -63,6 +68,17 @@ class UserControllerTest {
         userRepository.deleteAll()
         userBoxRepository.deleteAll()
         groupRepository.deleteAll()
+        mockkConstructor(DIdService::class)
+        mockDidService = mockk(relaxed = true)
+        setDidService(mockDidService)
+    }
+
+    // Set DidService
+    private fun setDidService(didService: DIdService) {
+        UserService::class.java.getDeclaredField("didService").apply {
+            isAccessible = true
+            set(userService, didService)
+        }
     }
 
     fun registerAndLogin(): String {

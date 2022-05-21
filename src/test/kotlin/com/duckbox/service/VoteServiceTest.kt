@@ -19,7 +19,9 @@ import com.duckbox.dto.BlindSigToken
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
+import com.duckbox.service.ethereum.DIdService
 import io.mockk.mockk
+import io.mockk.mockkConstructor
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,6 +64,8 @@ class VoteServiceTest {
     @Autowired
     private lateinit var blindSecp256k1: BlindSecp256k1
 
+    private lateinit var mockDidService: DIdService
+
     private var mockFcmService: FCMService = mockk(relaxed = true)
 
     private val mockVoteRegisterDto: VoteRegisterDto = MockDto.mockVoteRegisterDto
@@ -78,6 +82,17 @@ class VoteServiceTest {
         userBoxRepository.deleteAll()
         groupRepository.deleteAll()
         setFCMService() // set fcmService to mockFcmService
+        mockkConstructor(DIdService::class)
+        mockDidService = mockk(relaxed = true)
+        setDidService(mockDidService)
+    }
+
+    // Set DidService
+    private fun setDidService(didService: DIdService) {
+        UserService::class.java.getDeclaredField("didService").apply {
+            isAccessible = true
+            set(userService, didService)
+        }
     }
 
     // Set private fcmService
@@ -100,6 +115,7 @@ class VoteServiceTest {
                 college = "ku",
                 department = listOf("computer", "software"),
                 fcmToken = "temp",
+                address = "0x11",
             )
         )
     }
@@ -116,6 +132,7 @@ class VoteServiceTest {
                 college = "ku",
                 department = listOf("computer", "software"),
                 fcmToken = "temp",
+                address = "0x11",
             )
         )
     }

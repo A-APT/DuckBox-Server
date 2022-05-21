@@ -48,16 +48,24 @@ class EmailService (
         }
         val token = code.toString()
 
-        // create EmailAuth entity
         val expirationTime = createTime + EXPIRATION_TIME
-        emailAuthRepository.save(
-            EmailAuth(
-            email = targetEmail,
-            token = token,
-            expirationTime = expirationTime,
-            expired = false
-        )
-        )
+        runCatching {
+            emailAuthRepository.findByEmail(targetEmail)
+        }.onSuccess {
+            // re-request
+            it.token = token
+            it.expirationTime = expirationTime
+            it.expired = false
+            emailAuthRepository.save(it)
+        }.onFailure {
+            // create EmailAuth entity
+            emailAuthRepository.save(EmailAuth(
+                email = targetEmail,
+                token = token,
+                expirationTime = expirationTime,
+                expired = false
+            ))
+        }
 
         return token
     }

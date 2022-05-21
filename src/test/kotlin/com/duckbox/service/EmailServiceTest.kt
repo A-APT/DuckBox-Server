@@ -42,7 +42,24 @@ class EmailServiceTest {
         emailAuth.apply {
             assertThat(email).isEqualTo(testEmail)
             assertThat(expired).isEqualTo(false)
-            assertThat(token).isEqualTo(token)
+            assertThat(this.token).isEqualTo(token)
+        }
+    }
+
+    @Test
+    fun is_createEmailToken_works_well_on_re_request() {
+        // act
+        val token: String = emailService.createEmailToken(testEmail)
+        val token2: String = emailService.createEmailToken(testEmail)
+
+        // assert
+        assertThat(token.length).isEqualTo(6)
+        assertThat(token).isNotEqualTo(token2)
+        val emailAuth = emailAuthRepository.findByEmail(testEmail)
+        emailAuth.apply {
+            assertThat(email).isEqualTo(testEmail)
+            assertThat(expired).isEqualTo(false)
+            assertThat(this.token).isEqualTo(token2)
         }
     }
 

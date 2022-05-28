@@ -191,8 +191,8 @@ class VoteService (
 
         // generate 2 blind signatures: sign with Server's key and VoteOwner's key
         val blindMessage: BigInteger = BigInteger(blindSigRequestDto.blindMessage, 16)
-        val blindSigOfServer: BigInteger = blindSignatureService.blindSig(blindMessage)
-        val blindSigOfVoteOwner: BigInteger = blindSignatureService.blindSig(vote.ownerPrivate, blindMessage)
+        val blindSigOfServer: BigInteger = blindSignatureService.blindSig(blindMessage = blindMessage)
+        val blindSigOfVoteOwner: BigInteger = blindSignatureService.blindSig(blindMessage = blindMessage, privateKey = vote.ownerPrivate)
 
         // update user's voting record
         userBox.votes.add(voteObjectId)

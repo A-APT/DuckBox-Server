@@ -192,8 +192,8 @@ class SurveyService (
 
         // generate 2 blind signatures: sign with Server's key and SurveyOwner's key
         val blindMessage: BigInteger = BigInteger(blindSigRequestDto.blindMessage, 16)
-        val blindSigOfServer: BigInteger = blindSignatureService.blindSig(blindMessage)
-        val blindSigOfSurveyOwner: BigInteger = blindSignatureService.blindSig(survey.ownerPrivate, blindMessage)
+        val blindSigOfServer: BigInteger = blindSignatureService.blindSig(blindMessage = blindMessage)
+        val blindSigOfSurveyOwner: BigInteger = blindSignatureService.blindSig(blindMessage = blindMessage, privateKey = survey.ownerPrivate)
 
         // update user's survey record
         userBox.surveys.add(surveyObjectId)

@@ -531,6 +531,88 @@ class GroupServiceTest {
     }
 
     @Test
+    fun is_reportGroup_works_well() {
+        // arrange
+        registerMockUser()
+        registerMockUser2()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+
+        // act
+        groupService.reportGroup(mockUserEmail2, groupId)
+
+        // assert
+        assertThat(groupRepository.findById(ObjectId(groupId)).get().reported.size).isEqualTo(1)
+    }
+
+    @Test
+    fun is_reportGroup_works_well_to_limit() {
+        // arrange
+        registerMockUser()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+
+        val emailList: List<String> = listOf("1@com", "2@com", "3@com", "4@com", "5@com")
+        val reportedList: MutableList<String> = mutableListOf()
+        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[0], nickname = "1")).body!!)
+        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[1], nickname = "2")).body!!)
+        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[2], nickname = "3")).body!!)
+        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[3], nickname = "4")).body!!)
+        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[4], nickname = "5")).body!!)
+
+        // act: report to limit(5)
+        emailList.forEach {
+            groupService.reportGroup(it, groupId)
+        }
+
+        // assert
+        groupRepository.findById(ObjectId(groupId)).get().apply {
+            assertThat(status).isEqualTo(GroupStatus.REPORTED)
+            assertThat(reported.size).isEqualTo(reportedList.size)
+            assertThat(reported).isEqualTo(reportedList)
+        }
+    }
+
+    @Test
+    fun is_reportGroup_throws_on_invalid_groupId() {
+        // arrange
+        registerMockUser()
+        val invalidGroupId: String = ObjectId().toString()
+
+        // act & assert
+        runCatching {
+            groupService.reportGroup(mockUserEmail, invalidGroupId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Invalid GroupId: [${invalidGroupId}]")
+        }
+    }
+
+    @Test
+    fun is_reportGroup_throws_on_already_reported() {
+        // arrange
+        registerMockUser()
+        registerMockUser2()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+
+        // act
+        groupService.reportGroup(mockUserEmail2, groupId)
+
+        // act & assert
+        runCatching {
+            groupService.reportGroup(mockUserEmail2, groupId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is ConflictException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [$mockUserEmail2] has already reported this group[$groupId].")
+        }
+    }
+
+    @Test
     fun is_searchGroup_works_well() {
         // arrange
         registerMockUser()

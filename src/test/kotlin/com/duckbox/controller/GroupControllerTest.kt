@@ -13,6 +13,7 @@ import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.RegisterDto
+import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
 import com.duckbox.service.GroupService
@@ -538,6 +539,80 @@ class GroupControllerTest {
             .exchange("${baseAddress}/api/v1/group/member", HttpMethod.DELETE, httpEntity, NotFoundException::class.java)
             .apply {
                 Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_reportGroup_throws_no_authToken_header() {
+        // arrange
+        val httpEntity = HttpEntity(ObjectId().toString(), HttpHeaders())
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/status", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_reportGroup_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        registerMockUser2()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail2).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail2, mockDto).body!! // mockUser 2
+        val httpEntity = HttpEntity(groupId, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/status", HttpMethod.POST, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+            }
+    }
+
+    @Test
+    fun is_reportGroup_throws_on_invalid_groupId() {
+        // arrange
+        val token: String = registerAndLogin()
+        registerMockUser2()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val httpEntity = HttpEntity(ObjectId().toString(), httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/status", HttpMethod.POST, httpEntity, NotFoundException::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_reportGroup_throws_on_already_reported() {
+        // arrange
+        val token: String = registerAndLogin()
+        registerMockUser2()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail2).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail2, mockDto).body!! // mockUser 2
+        val httpEntity = HttpEntity(groupId, httpHeaders)
+
+        // act
+        groupService.reportGroup(mockUserEmail, groupId)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/status", HttpMethod.POST, httpEntity, ConflictException::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.CONFLICT)
             }
     }
 

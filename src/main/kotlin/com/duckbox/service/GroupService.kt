@@ -150,7 +150,8 @@ class GroupService (
                 status = GroupStatus.PENDING,
                 description = registerDto.description,
                 profile = profileImageId,
-                header = headerImageId
+                header = headerImageId,
+                reported = mutableListOf()
             )
         ).id
 
@@ -270,6 +271,32 @@ class GroupService (
 
         userBox.groups.remove(groupObjectId)
         userBoxRepository.save(userBox)
+    }
+
+    fun reportGroup(userEmail: String, groupId: String) {
+        val groupObjectId = ObjectId(groupId)
+
+        // check group is valid
+        lateinit var groupEntity: GroupEntity
+        runCatching {
+            groupRepository.findById(groupObjectId).get()
+        }.onSuccess {
+            groupEntity = it
+        }.onFailure {
+            throw NotFoundException("Invalid GroupId: [${groupId}]")
+        }
+
+        val userDid: String = userRepository.findByEmail(userEmail).did
+        if (groupEntity.reported.find { it == userDid } != null) {
+            throw ConflictException("User [$userEmail] has already reported this group[$groupObjectId].")
+        }
+        groupEntity.reported.add(userDid)
+
+        if (groupEntity.reported.size >= 5 && groupEntity.status != GroupStatus.REPORTED) {
+            groupEntity.status = GroupStatus.REPORTED
+        }
+
+        groupRepository.save(groupEntity)
     }
 
     fun searchGroup(query: String): ResponseEntity<List<GroupDetailDto>> {

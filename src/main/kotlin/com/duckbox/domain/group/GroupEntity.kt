@@ -15,6 +15,7 @@ class GroupEntity (
     var description: String,
     var profile: ObjectId? = null, // image
     var header: ObjectId? = null, // image
+    var reported: MutableList<String>, // did list who reported this group (limit: 5)
 ) {
     fun toGroupDetailDto(_profile: ByteArray?, _header: ByteArray?): GroupDetailDto {
         return GroupDetailDto(

@@ -362,6 +362,66 @@ class GroupServiceTest {
     }
 
     @Test
+    fun is_removeGroup_works_well() {
+        // arrange
+        registerMockUser()
+        registerMockUser2()
+        val mockProfile: ByteArray = "profile file!".toByteArray()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(
+            leader = userRepository.findByEmail(mockUserEmail).did,
+            profile = mockProfile
+        )
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        val profileId: ObjectId = groupRepository.findById(ObjectId(groupId)).get().profile!!
+        groupService.joinGroup(mockUserEmail2, groupId)
+
+        // act
+        groupService.removeGroup(mockUserEmail, groupId)
+
+        // assert
+        assertThat(userBoxRepository.findByEmail(mockUserEmail).groups.size).isEqualTo(0)
+        assertThat(userBoxRepository.findByEmail(mockUserEmail2).groups.size).isEqualTo(0)
+        assertThat(groupRepository.findById(ObjectId(groupId)).isEmpty).isEqualTo(true)
+        assertThat(photoRepository.findById(profileId).isEmpty).isEqualTo(true)
+    }
+
+    @Test
+    fun is_removeGroup_throws_on_invalid_groupId() {
+        // arrange
+        registerMockUser()
+        val invalidGroupId: String = ObjectId().toString()
+
+        // act & assert
+        runCatching {
+            groupService.removeGroup(mockUserEmail, invalidGroupId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Invalid GroupId: [${invalidGroupId}]")
+        }
+    }
+
+    @Test
+    fun is_removeGroup_throws_not_group_owner() {
+        // arrange
+        registerMockUser()
+        registerMockUser2()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+
+        // act & assert
+        runCatching {
+            groupService.removeGroup(mockUserEmail2, groupId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is ForbiddenException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [$mockUserEmail2] is not a group[$groupId] owner.")
+        }
+    }
+
+    @Test
     fun is_joinGroup_works_well() {
         // arrange
         registerMockUser()

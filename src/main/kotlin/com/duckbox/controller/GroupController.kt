@@ -45,6 +45,13 @@ class GroupController (
         return ResponseEntity.noContent().build()
     }
 
+    @DeleteMapping("/api/v1/group")
+    fun removeGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupId: String): ResponseEntity<Unit> {
+        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
+        groupService.removeGroup(userEmail, groupId)
+        return ResponseEntity.noContent().build()
+    }
+
     @GetMapping("/api/v1/group/{groupId}")
     fun findGroupById(@RequestHeader httpHeaders: Map<String, String>, @PathVariable groupId: String): ResponseEntity<GroupDetailDto> {
         return groupService.findGroupById(groupId)

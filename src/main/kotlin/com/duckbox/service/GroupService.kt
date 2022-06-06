@@ -14,6 +14,7 @@ import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.dto.notification.NotificationMessage
 import com.duckbox.errors.exception.ConflictException
+import com.duckbox.errors.exception.ForbiddenException
 import com.duckbox.errors.exception.NotFoundException
 import com.google.firebase.messaging.FirebaseMessaging
 import org.bson.types.ObjectId
@@ -168,6 +169,40 @@ class GroupService (
             .body(
                 id.toString()
             )
+    }
+
+    fun removeGroup(userEmail: String, groupId: String) {
+        val groupObjectId = ObjectId(groupId)
+
+        // check group is valid
+        lateinit var groupEntity: GroupEntity
+        runCatching {
+            groupRepository.findById(groupObjectId).get()
+        }.onSuccess {
+            groupEntity = it
+        }.onFailure {
+            throw NotFoundException("Invalid GroupId: [${groupId}]")
+        }
+
+        // check user is the group owner
+        if (userRepository.findByEmail(userEmail).did != groupEntity.leader) {
+            throw ForbiddenException("User [$userEmail] is not a group[$groupId] owner.")
+        }
+
+        // delete images
+        if (groupEntity.profile != null) photoService.deletePhoto(groupEntity.profile!!)
+        if (groupEntity.header != null) photoService.deletePhoto(groupEntity.header!!)
+
+        // delete group entity
+        groupRepository.delete(groupEntity)
+
+        // delete from all member's box
+        userBoxRepository.findAll().forEach { userBox ->
+            if (userBox.groups.find { it == groupObjectId } != null) {
+                userBox.groups.remove(groupObjectId)
+                userBoxRepository.save(userBox)
+            }
+        }
     }
 
     fun updateGroup(userEmail: String, groupUpdateDto: GroupUpdateDto): GroupEntity {

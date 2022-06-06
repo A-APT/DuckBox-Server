@@ -398,6 +398,79 @@ class GroupControllerTest {
     }
 
     @Test
+    fun is_leaveGroup_throws_no_authToken_header() {
+        // arrange
+        val httpEntity = HttpEntity(ObjectId().toString(), HttpHeaders())
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/member", HttpMethod.DELETE, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.FORBIDDEN)
+            }
+    }
+
+    @Test
+    fun is_leaveGroup_works_well() {
+        // arrange
+        val token: String = registerAndLogin()
+        registerMockUser2()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail2).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail2, mockDto).body!! // mockUser 2
+
+        groupService.joinGroup(mockUserEmail, groupId)
+        val httpEntity = HttpEntity(groupId, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/member", HttpMethod.DELETE, httpEntity, Unit::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NO_CONTENT)
+            }
+    }
+
+    @Test
+    fun is_leaveGroup_throws_on_invalid_groupId() {
+        // arrange
+        val token: String = registerAndLogin()
+        registerMockUser2()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val httpEntity = HttpEntity(ObjectId().toString(), httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/member", HttpMethod.DELETE, httpEntity, NotFoundException::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
+    fun is_leaveGroup_throws_on_not_group_member() {
+        // arrange
+        val token: String = registerAndLogin()
+        registerMockUser2()
+        val httpHeaders = HttpHeaders().apply {
+            this["Authorization"] = "Bearer $token"
+        }
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail2).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail2, mockDto).body!! // mockUser 2
+        val httpEntity = HttpEntity(groupId, httpHeaders)
+
+        // act, assert
+        restTemplate
+            .exchange("${baseAddress}/api/v1/group/member", HttpMethod.DELETE, httpEntity, NotFoundException::class.java)
+            .apply {
+                Assertions.assertThat(statusCode).isEqualTo(HttpStatus.NOT_FOUND)
+            }
+    }
+
+    @Test
     fun is_searchGroup_works_no_headers_token() {
         // act, assert
         val query = "test"

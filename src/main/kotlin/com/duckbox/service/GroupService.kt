@@ -213,11 +213,27 @@ class GroupService (
             throw NotFoundException("User [${userEmail}] was not registered.")
         }
 
-        // Check voteId is valid
+        // Check groupId is valid
         if (groupRepository.findById(groupObjectId).isEmpty)
             throw NotFoundException("Invalid GroupId: [${groupId}]")
 
         userBox.groups.add(groupObjectId)
+        userBoxRepository.save(userBox)
+    }
+
+    fun leaveGroup(userEmail: String, groupId: String) {
+        val groupObjectId = ObjectId(groupId)
+        val userBox: UserBox =  userBoxRepository.findByEmail(userEmail)
+
+        // Check groupId is valid
+        if (groupRepository.findById(groupObjectId).isEmpty)
+            throw NotFoundException("Invalid GroupId: [${groupId}]")
+
+        if (userBox.groups.find { it == groupObjectId } == null) {
+            throw NotFoundException("User [$userEmail] is not a group[$groupObjectId] member.")
+        }
+
+        userBox.groups.remove(groupObjectId)
         userBoxRepository.save(userBox)
     }
 

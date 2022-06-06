@@ -57,6 +57,13 @@ class GroupController (
         return ResponseEntity.noContent().build()
     }
 
+    @DeleteMapping("/api/v1/group/member")
+    fun leaveGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupId: String): ResponseEntity<Unit> {
+        val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
+        groupService.leaveGroup(userEmail, groupId)
+        return ResponseEntity.noContent().build()
+    }
+
     @GetMapping("/api/v1/groups/items")
     fun findGroupVoteAndSurveyOfUser(@RequestHeader httpHeaders: Map<String, String>): ResponseEntity<List<OverallDetailDto>> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)

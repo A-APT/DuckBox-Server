@@ -416,6 +416,61 @@ class GroupServiceTest {
     }
 
     @Test
+    fun is_leaveGroup_works_well() {
+        // arrange
+        registerMockUser()
+        registerMockUser2()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+
+        groupService.joinGroup(mockUserEmail2, groupId)
+
+        // act
+        groupService.leaveGroup(mockUserEmail2, groupId)
+
+        // assert
+        userBoxRepository.findByEmail(mockUserEmail2).apply {
+            assertThat(groups.size).isEqualTo(0)
+        }
+    }
+
+    @Test
+    fun is_leaveGroup_throws_on_invalid_groupId() {
+        // arrange
+        registerMockUser()
+        val invalidGroupId: String = ObjectId().toString()
+
+        // act & assert
+        runCatching {
+            groupService.leaveGroup(mockUserEmail, invalidGroupId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("Invalid GroupId: [${invalidGroupId}]")
+        }
+    }
+
+    @Test
+    fun is_leaveGroup_throws_on_not_group_member() {
+        // arrange
+        registerMockUser()
+        registerMockUser2()
+        val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
+        val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+
+        // act & assert
+        runCatching {
+            groupService.leaveGroup(mockUserEmail2, groupId)
+        }.onSuccess {
+            fail("This should be failed.")
+        }.onFailure {
+            assertThat(it is NotFoundException).isEqualTo(true)
+            assertThat(it.message).isEqualTo("User [$mockUserEmail2] is not a group[$groupId] member.")
+        }
+    }
+
+    @Test
     fun is_searchGroup_works_well() {
         // arrange
         registerMockUser()

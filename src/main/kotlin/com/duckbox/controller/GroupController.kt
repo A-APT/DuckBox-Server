@@ -4,6 +4,7 @@ import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
+import com.duckbox.dto.group.ReportRequestDto
 import com.duckbox.security.JWTTokenProvider
 import com.duckbox.service.GroupService
 import org.springframework.http.ResponseEntity
@@ -72,9 +73,9 @@ class GroupController (
     }
 
     @PostMapping("/api/v1/group/status")
-    fun reportGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody groupId: String): ResponseEntity<Unit> {
+    fun reportGroup(@RequestHeader httpHeaders: Map<String, String>, @RequestBody reportRequestDto: ReportRequestDto): ResponseEntity<Unit> {
         val userEmail: String = jwtTokenProvider.getUserPK(jwtTokenProvider.getTokenFromHeader(httpHeaders)!!)
-        groupService.reportGroup(userEmail, groupId)
+        groupService.reportGroup(userEmail, reportRequestDto)
         return ResponseEntity.noContent().build()
     }
 

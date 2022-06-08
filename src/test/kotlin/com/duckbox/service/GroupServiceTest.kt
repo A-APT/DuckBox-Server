@@ -13,6 +13,7 @@ import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
+import com.duckbox.dto.group.ReportRequestDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.ConflictException
 import com.duckbox.errors.exception.ForbiddenException
@@ -537,9 +538,10 @@ class GroupServiceTest {
         registerMockUser2()
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
         val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        val reportRegisterDto = ReportRequestDto(groupId, 0, "reason")
 
         // act
-        groupService.reportGroup(mockUserEmail2, groupId)
+        groupService.reportGroup(mockUserEmail2, reportRegisterDto)
 
         // assert
         assertThat(groupRepository.findById(ObjectId(groupId)).get().reported.size).isEqualTo(1)
@@ -552,24 +554,23 @@ class GroupServiceTest {
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
         val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
 
+        val reportRegisterDto = ReportRequestDto(groupId, 0, "reason")
         val emailList: List<String> = listOf("1@com", "2@com", "3@com", "4@com", "5@com")
-        val reportedList: MutableList<String> = mutableListOf()
-        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[0], nickname = "1")).body!!)
-        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[1], nickname = "2")).body!!)
-        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[2], nickname = "3")).body!!)
-        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[3], nickname = "4")).body!!)
-        reportedList.add(userService.register(MockDto.mockRegisterDto.copy(email = emailList[4], nickname = "5")).body!!)
+        userService.register(MockDto.mockRegisterDto.copy(email = emailList[0], nickname = "1"))
+        userService.register(MockDto.mockRegisterDto.copy(email = emailList[1], nickname = "2"))
+        userService.register(MockDto.mockRegisterDto.copy(email = emailList[2], nickname = "3"))
+        userService.register(MockDto.mockRegisterDto.copy(email = emailList[3], nickname = "4"))
+        userService.register(MockDto.mockRegisterDto.copy(email = emailList[4], nickname = "5"))
 
         // act: report to limit(5)
         emailList.forEach {
-            groupService.reportGroup(it, groupId)
+            groupService.reportGroup(it, reportRegisterDto)
         }
 
         // assert
         groupRepository.findById(ObjectId(groupId)).get().apply {
             assertThat(status).isEqualTo(GroupStatus.REPORTED)
-            assertThat(reported.size).isEqualTo(reportedList.size)
-            assertThat(reported).isEqualTo(reportedList)
+            assertThat(reported.size).isEqualTo(emailList.size)
         }
     }
 
@@ -578,10 +579,11 @@ class GroupServiceTest {
         // arrange
         registerMockUser()
         val invalidGroupId: String = ObjectId().toString()
+        val reportRegisterDto = ReportRequestDto(invalidGroupId, 0, "reason")
 
         // act & assert
         runCatching {
-            groupService.reportGroup(mockUserEmail, invalidGroupId)
+            groupService.reportGroup(mockUserEmail, reportRegisterDto)
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {
@@ -597,13 +599,14 @@ class GroupServiceTest {
         registerMockUser2()
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail).did)
         val groupId: String = groupService.registerGroup(mockUserEmail, mockDto).body!!
+        val reportRegisterDto = ReportRequestDto(groupId, 0, "reason")
 
         // act
-        groupService.reportGroup(mockUserEmail2, groupId)
+        groupService.reportGroup(mockUserEmail2, reportRegisterDto)
 
         // act & assert
         runCatching {
-            groupService.reportGroup(mockUserEmail2, groupId)
+            groupService.reportGroup(mockUserEmail2, reportRegisterDto)
         }.onSuccess {
             fail("This should be failed.")
         }.onFailure {

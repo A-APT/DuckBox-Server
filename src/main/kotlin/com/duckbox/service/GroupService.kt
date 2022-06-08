@@ -3,6 +3,7 @@ package com.duckbox.service
 import com.duckbox.domain.group.GroupEntity
 import com.duckbox.domain.group.GroupRepository
 import com.duckbox.domain.group.GroupStatus
+import com.duckbox.domain.group.Report
 import com.duckbox.domain.survey.SurveyRepository
 import com.duckbox.domain.user.UserBox
 import com.duckbox.domain.user.UserBoxRepository
@@ -11,6 +12,7 @@ import com.duckbox.domain.vote.VoteRepository
 import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
+import com.duckbox.dto.group.ReportRequestDto
 import com.duckbox.dto.group.GroupUpdateDto
 import com.duckbox.dto.notification.NotificationMessage
 import com.duckbox.errors.exception.ConflictException
@@ -151,7 +153,7 @@ class GroupService (
                 description = registerDto.description,
                 profile = profileImageId,
                 header = headerImageId,
-                reported = mutableListOf()
+                reported = mutableMapOf()
             )
         ).id
 
@@ -273,8 +275,8 @@ class GroupService (
         userBoxRepository.save(userBox)
     }
 
-    fun reportGroup(userEmail: String, groupId: String) {
-        val groupObjectId = ObjectId(groupId)
+    fun reportGroup(userEmail: String, reportRequestDto: ReportRequestDto) {
+        val groupObjectId = ObjectId(reportRequestDto.groupId)
 
         // check group is valid
         lateinit var groupEntity: GroupEntity
@@ -283,14 +285,14 @@ class GroupService (
         }.onSuccess {
             groupEntity = it
         }.onFailure {
-            throw NotFoundException("Invalid GroupId: [${groupId}]")
+            throw NotFoundException("Invalid GroupId: [${reportRequestDto.groupId}]")
         }
 
         val userDid: String = userRepository.findByEmail(userEmail).did
-        if (groupEntity.reported.find { it == userDid } != null) {
+        if (groupEntity.reported.keys.find { it == userDid } != null) {
             throw ConflictException("User [$userEmail] has already reported this group[$groupObjectId].")
         }
-        groupEntity.reported.add(userDid)
+        groupEntity.reported[userDid] = Report(reportRequestDto.reportType, reportRequestDto.reason)
 
         if (groupEntity.reported.size >= 5 && groupEntity.status != GroupStatus.REPORTED) {
             groupEntity.status = GroupStatus.REPORTED

@@ -11,6 +11,7 @@ import com.duckbox.dto.OverallDetailDto
 import com.duckbox.dto.group.GroupDetailDto
 import com.duckbox.dto.group.GroupRegisterDto
 import com.duckbox.dto.group.GroupUpdateDto
+import com.duckbox.dto.group.ReportRequestDto
 import com.duckbox.dto.user.LoginRequestDto
 import com.duckbox.dto.user.RegisterDto
 import com.duckbox.errors.exception.ConflictException
@@ -565,7 +566,9 @@ class GroupControllerTest {
         }
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail2).did)
         val groupId: String = groupService.registerGroup(mockUserEmail2, mockDto).body!! // mockUser 2
-        val httpEntity = HttpEntity(groupId, httpHeaders)
+
+        val reportRegisterDto = ReportRequestDto(groupId, 0, "reason")
+        val httpEntity = HttpEntity(reportRegisterDto, httpHeaders)
 
         // act, assert
         restTemplate
@@ -583,7 +586,9 @@ class GroupControllerTest {
         val httpHeaders = HttpHeaders().apply {
             this["Authorization"] = "Bearer $token"
         }
-        val httpEntity = HttpEntity(ObjectId().toString(), httpHeaders)
+
+        val reportRegisterDto = ReportRequestDto(ObjectId().toString(), 0, "reason")
+        val httpEntity = HttpEntity(reportRegisterDto, httpHeaders)
 
         // act, assert
         restTemplate
@@ -603,10 +608,12 @@ class GroupControllerTest {
         }
         val mockDto: GroupRegisterDto = mockGroupRegisterDto.copy(leader = userRepository.findByEmail(mockUserEmail2).did)
         val groupId: String = groupService.registerGroup(mockUserEmail2, mockDto).body!! // mockUser 2
-        val httpEntity = HttpEntity(groupId, httpHeaders)
+
+        val reportRegisterDto = ReportRequestDto(groupId, 0, "reason")
+        val httpEntity = HttpEntity(reportRegisterDto, httpHeaders)
 
         // act
-        groupService.reportGroup(mockUserEmail, groupId)
+        groupService.reportGroup(mockUserEmail, reportRegisterDto)
 
         // act, assert
         restTemplate

@@ -15,7 +15,7 @@ class GroupEntity (
     var description: String,
     var profile: ObjectId? = null, // image
     var header: ObjectId? = null, // image
-    var reported: MutableList<String>, // did list who reported this group (limit: 5)
+    var reported: MutableMap<String, Report>, // did who reported this group (limit: 5)
 ) {
     fun toGroupDetailDto(_profile: ByteArray?, _header: ByteArray?): GroupDetailDto {
         return GroupDetailDto(
@@ -32,3 +32,8 @@ enum class GroupStatus {
     DELETED, // [삭제된]
     REPORTED, // [신고된]
 }
+
+data class Report (
+    val reportType: Int,
+    val reason: String,
+)
